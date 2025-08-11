@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Muhammad Muneeb — Unity Developer</title>
+  <meta name="description" content="Single-page portfolio for a Unity developer. Projects, skills, and contact." />
+  <meta name="theme-color" content="#0ea5e9" />
+  <meta property="og:title" content="Muhammad Muneeb — Unity Developer" />
+  <meta property="og:description" content="Gameplay, tools, and mobile/PC builds. Available for remote work." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://avatars.githubusercontent.com/u/1?v=4" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' x='8' font-size='48'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E" />
+
+  <style>
+    /* -------------------- RESET -------------------- */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    img,svg,video{display:block;max-width:100%}
+    input,button,textarea,select{font:inherit}
+
+    /* -------------------- THEME -------------------- */
+    :root{
+      --bg:#0b1020; --panel:#121a2f; --text:#e6edf6; --muted:#9fb0c6;
+      --brand:#0ea5e9; --brand-2:#22d3ee; --shadow:0 10px 30px rgba(2,8,23,.25);
+      --radius:18px;
+       --header-h: 72px;
+    }
+    [data-theme="light"]{
+      --bg:#f7fafc; --panel:#ffffff; --text:#0b1020; --muted:#42526b;
+      --shadow:0 10px 30px rgba(2,8,23,.12);
+    }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Noto Sans, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 70% -10%, rgba(14,165,233,.15), transparent 50%),
+        radial-gradient(900px 600px at -20% 10%, rgba(34,211,238,.15), transparent 50%),
+        var(--bg);
+    }
+
+    /* -------------------- LAYOUT -------------------- */
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    /* header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(150%) blur(8px);background:linear-gradient(180deg,rgba(2,8,23,.75),rgba(2,8,23,.35),transparent)} */
+    header{position:fixed;top:0;left:0;width:100%;height:var(--header-h);z-index: 50;backdrop-filter:saturate(150%) blur(8px);background:linear-gradient(180deg,rgba(2,8,23,.75),rgba(2,8,23,.35),transparent)}
+    main {
+  padding-top: 20px;
+}
+    nav{display:flex;align-items:center;gap:16px;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+    .brand .logo{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand),var(--brand-2));box-shadow:var(--shadow);font-weight:800}
+    .brand h1{font-size:18px;margin:0}
+    .nav-links{display:flex;gap:14px;align-items:center}
+    .nav-links a{color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:10px}
+    .nav-links a:hover{background:rgba(255,255,255,.06);color:var(--text)}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.1);padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));color:var(--text);text-decoration:none;box-shadow:var(--shadow)}
+    .btn:hover{border-color:rgba(255,255,255,.25)}
+    .btn.primary{border:none;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#001018}
+
+    /* -------------------- HERO -------------------- */
+    .hero{padding:72px 0 40px}
+    .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:center}
+    .kicker{display:inline-block;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:rgba(14,165,233,.15);color:#9be9ff;border:1px solid rgba(34,211,238,.3)}
+    h2.display{font-size:44px;line-height:1.05;margin:8px 0 12px;letter-spacing:-.02em}
+    .muted{color:var(--muted)}
+    .hero .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    .hero .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:18px}
+
+    /* -------------------- SECTIONS -------------------- */
+    section{padding:48px 0}
+    .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .section-title h3{margin:0;font-size:22px}
+    .grid{display:grid;gap:16px}
+    .grid.cards{grid-template-columns:repeat(12,1fr)}
+    .card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card .content{padding:16px}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;color:var(--muted);cursor:pointer}
+    .tags{display:flex;gap:8px;flex-wrap:wrap}
+    .tag.active{background:var(--brand);border-color:var(--brand);color:#001018}
+
+    /* Project cards */
+    .project{grid-column:span 6;display:flex;flex-direction:column;overflow:hidden}
+    .project .thumb{aspect-ratio:16/9;overflow:hidden;background:linear-gradient(135deg,rgba(14,165,233,.15),rgba(34,211,238,.12));border-bottom:1px solid rgba(255,255,255,.08)}
+    .project .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .project .meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .project .links{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Skills */
+    .skill{grid-column:span 3;padding:14px}
+
+    /* Experience */
+    .xp{display:grid;gap:12px}
+    .xp-item{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start;padding:12px;border:1px dashed rgba(255,255,255,.12);border-radius:14px}
+    .xp-item time{color:var(--muted)}
+
+    /* Contact */
+    .contact{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .contact .panel{padding:16px}
+
+    /* Footer */
+    footer{padding:26px 0 60px;color:var(--muted)}
+
+    /* Utilities */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* Responsive */
+    @media (max-width: 900px){
+      .hero-grid{grid-template-columns:1fr}
+      .project{grid-column:span 12}
+      .skill{grid-column:span 6}
+      .contact{grid-template-columns:1fr}
+      .xp-item{grid-template-columns:1fr}
+      nav .nav-links{display:none}
+      nav .nav-links.open{display:flex;flex-direction:column;position:absolute;top:62px;left:10px;right:10px;background:var(--panel);padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.12)}
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Muhammad Muneeb",
+    "jobTitle": "Sr. Unity Developer",
+    "url": "https://your-github-username.github.io/",
+    "sameAs": [
+      "https://github.com/your-github-username",
+      "https://www.linkedin.com/in/your-handle/"
+    ],
+    "knowsAbout": ["Unity", "C#", "Mobile Games", "Rendering", "Multiplayer"],
+    "email": "mailto:muneeb.asif063@gmail.com"
+  }
+  </script>
+</head>
+<body>
+  <a class="sr-only" href="#projects">Skip to content</a>
+
+  <header>
+    <div class="container">
+      <nav>
+        <a class="brand" href="#top" aria-label="Home">
+          <span class="logo">M</span>
+          <h1>Muhammad Muneeb</h1>
+        </a>
+        <div class="nav-links" id="nav">
+          <a href="#projects">Projects</a>
+          <a href="#skills">Skills</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+          <a href="./Muneeb_CV.pdf" download>Download CV</a>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <!-- <button class="btn" id="themeToggle" aria-label="Toggle theme">🌓 Theme</button> -->
+          <button class="btn" id="menu" aria-label="Menu">☰</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="kicker">Unity Developer • Gameplay • Rendering</span>
+          <h2 class="display">I build snappy, scalable Unity games for <span style="background:linear-gradient(135deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent">mobile & PC</span>.</h2>
+          <p class="muted">5+ years crafting gameplay, tools, and production pipelines. Experienced with URP/HRDP, optimization, and multiplayer (Photon/Fusion). Open to remote roles and contracting.</p>
+          <div class="actions">
+            <a class="btn primary" href="#projects">See Projects</a>
+            <a class="btn" href="mailto:muneeb.asif063@gmail.com">Email Me</a>
+            <a class="btn" href="https://github.com/muneeb063" target="_blank" rel="noopener">GitHub</a>
+            <a class="btn" href="https://www.linkedin.com/in/muhammad-muneeb-168395a1/" target="_blank" rel="noopener">LinkedIn</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="content">
+            <h3 style="margin:0 0 8px">Latest Build</h3>
+            <p class="muted" style="margin-top:0">Play or download.</p>
+            <div class="tags" style="margin:12px 0 14px">
+              <!-- <span class="tag">WebGL</span> -->
+              <span class="tag">Mobile</span>
+              <span class="tag">C#</span>
+              <span class="tag">URP</span>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <!-- <a class="btn primary" href="https://your-itch-username.itch.io/your-unity-game" target="_blank" rel="noopener">▶ Play WebGL</a> -->
+              <a class="btn" href="https://play.google.com/store/apps/details?id=com.genigames.color.match.train.sort.puzzle&hl=en" title="Android APK placeholder">⬇ Android APK</a>
+              <a class="btn" href="https://www.nitroleague.com/" title="Windows build placeholder">⬇ Windows EXE</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="container">
+        <div class="section-title">
+          <h3>Featured Projects</h3>
+          <div class="tags" aria-label="Filters">
+            <button class="tag active" data-filter="all" aria-pressed="true">All</button>
+            <button class="tag" data-filter="mobile" aria-pressed="false">Mobile</button>
+            <button class="tag" data-filter="pc" aria-pressed="false">PC</button>
+            <button class="tag" data-filter="ar" aria-pressed="false">AR</button>
+            <button class="tag" data-filter="social" aria-pressed="false">Social</button>
+          </div>
+        </div>
+
+        <div class="grid cards" id="projectGrid">
+          <!-- Card: Nitro League -->
+          <article class="card project" data-tags="pc mobile web">
+            <div class="thumb">
+              <img src="./images/nitro-league.jpg" alt="Nitro League Screenshot">
+            </div>
+            <div class="content">
+              <div class="meta">
+                <h4 style="margin:0">Nitro League</h4>
+                <span class="tag">Racing Metaverse</span>
+              </div>
+              <p class="muted">Futuristic multiplayer racing set in a Web3-enabled world. Own & customize cars, race in events, and compete for leaderboard rewards.</p>
+              <div class="tags">
+                <span class="tag">Unity</span>
+                <span class="tag">PC & Mobile</span>
+                <span class="tag">Web3</span>
+              </div>
+              <div class="links" style="margin-top:10px">
+                <a class="btn" href="https://www.nitroleague.com/" target="_blank" rel="noopener">🌐 Website</a>
+                <a class="btn" href="https://www.nitroleague.com/" target="_blank" rel="noopener">⬇ Download</a>
+                <a class="btn" href="https://x.com/nitroleaguegame" target="_blank" rel="noopener">𝕏 Updates</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card: RealityFence -->
+          <article class="card project" data-tags="mobile ar social">
+            <div class="thumb">
+              <img src="./images/realityfence.jpg" alt="RealityFence App Screenshot" loading="lazy" />
+            </div>
+            <div class="content">
+              <div class="meta">
+                <h4 style="margin:0">RealityFence</h4>
+                <span class="tag">AR Business</span>
+              </div>
+              <p class="muted">Augmented-reality tool that lets users visualize and configure fences in-place to boost on-the-spot sales. Built with AR and designed for ease of use and rapid decision-making.</p>
+              <div class="tags">
+                <span class="tag">iOS</span>
+                <span class="tag">AR & Mobile</span>
+                <span class="tag">Sales Tool</span>
+              </div>
+              <div class="links" style="margin-top:10px">
+                <a class="btn" href="https://apps.apple.com/pk/app/realityfence/id6453638654" target="_blank" rel="noopener">▶ App Store</a>
+                <a class="btn" href="https://www.realityfence.com/" target="_blank" rel="noopener">🌐 Website</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- Swagr -->
+<article class="card project" data-tags="mobile ar social">
+  <div class="thumb">
+    <img src="./images/swagr.png" alt="Swagr App Screenshot" loading="lazy" />
+  </div>
+  <div class="content">
+    <div class="meta">
+      <h4 style="margin:0">Swagr</h4>
+      <span class="tag">AR</span>
+    </div>
+    <p class="muted">Gamified brand engagement app using AR to connect consumers with rewards and interactive challenges.</p>
+    <div class="tags">
+      <span class="tag">iOS</span>
+      <span class="tag">AR & Mobile</span>
+      <span class="tag">Brand Engagement</span>
+    </div>
+    <div class="links" style="margin-top:10px">
+      <a class="btn" href="https://apps.apple.com/pk/app/swagr/id6449583086" target="_blank" rel="noopener">▶ App Store</a>
+      <a class="btn" href="https://swagr.com/" target="_blank" rel="noopener">🌐 Website</a>
+    </div>
+  </div>
+</article>
+
+<!-- Card: LikeMan -->
+<article class="card project" data-tags="mobile social">
+  <div class="thumb">
+    <img src="./images/likeman.jpg" alt="LikeMan App Screenshot" loading="lazy" />
+  </div>
+  <div class="content">
+    <div class="meta">
+      <h4 style="margin:0">LikeMan</h4>
+      <span class="tag">Social Networking</span>
+    </div>
+    <p class="muted">
+      Social engagement platform designed to boost visibility and interactions on content through intuitive UI and gamified features.
+    </p>
+    <div class="tags">
+      <span class="tag">iOS</span>
+      <span class="tag">Android</span>
+      <span class="tag">Social</span>
+    </div>
+    <div class="links" style="margin-top:10px">
+      <a class="btn" href="https://www.cubix.co/work/likeman/" target="_blank" rel="noopener">🌐 Website</a>
+    </div>
+  </div>
+</article>
+
+<article class="card project" data-tags="pc web">
+  <div class="thumb">
+    <img src="./images/second-world.jpg" alt="Second World Game Screenshot" loading="lazy" />
+  </div>
+  <div class="content">
+    <div class="meta">
+      <h4 style="margin:0">Second World</h4>
+      <span class="tag">Metaverse</span>
+    </div>
+    <p class="muted">
+      A next-gen metaverse platform combining blockchain, immersive virtual environments, and user-generated content for a fully interactive social experience.
+    </p>
+    <div class="tags">
+      <span class="tag">Unity</span>
+      <span class="tag">PC</span>
+      <span class="tag">Blockchain</span>
+    </div>
+    <div class="links" style="margin-top:10px">
+      <a class="btn" href="https://www.cubix.co/work/second-world-case-study/" target="_blank" rel="noopener">🌐 Case Study</a>
+    </div>
+  </div>
+</article>
+
+
+
+          <!-- Card: My Perfect Farm -->
+          <article class="card project" data-tags="mobile">
+            <div class="thumb">
+              <img src="./images/my-perfect-farm.jpg" alt="My Perfect Farm Screenshot" loading="lazy" />
+            </div>
+            <div class="content">
+              <div class="meta">
+                <h4 style="margin:0">My Perfect Farm</h4>
+                <span class="tag">Mobile</span>
+              </div>
+              <p class="muted">A farming simulation game where you grow crops, raise animals, and manage your dream farm. Includes resource management, crafting, and seasonal events.</p>
+              <div class="tags">
+                <span class="tag">Unity</span>
+                <span class="tag">Simulation</span>
+                <span class="tag">Farming</span>
+              </div>
+              <div class="links" style="margin-top:10px">
+                <a class="btn" href="https://play.google.com/store/apps/details?id=com.elitegames.myperfectfarm" target="_blank" rel="noopener">▶ Google Play</a>
+              </div>
+            </div>
+          </article>
+          <!-- Card: Rail Frenzy (Color Sort Puzzle) -->
+<article class="card project" data-tags="mobile puzzle">
+  <div class="thumb">
+    <img src="./images/rail-frenzy.jpg" alt="Rail Frenzy Screenshot" />
+  </div>
+  <div class="content">
+    <div class="meta">
+      <h4 style="margin:0">Rail Frenzy: Color Sort Puzzle</h4>
+      <span class="tag">Mobile</span>
+    </div>
+    <p class="muted">
+  Match colors with rail blocks in this fast-paced, train-themed sorting puzzle. 
+  Test your speed and precision as you progress through challenging levels.
+</p>
+    <div class="tags">
+      <span class="tag">Unity</span>
+      <span class="tag">Puzzle</span>
+      <span class="tag">Sorting</span>
+    </div>
+    <div class="links" style="margin-top:10px">
+      <a class="btn" href="https://play.google.com/store/apps/details?id=com.genigames.color.match.train.sort.puzzle" target="_blank" rel="noopener">▶ Google Play</a>
+    </div>
+  </div>
+</article>
+
+
+          <!-- Card: Jackaroo (Card Games) -->
+          <article class="card project" data-tags="mobile">
+            <div class="thumb">
+              <img src="./images/jackaroo.jpg" alt="Jackaroo Card Games Screenshot" loading="lazy" />
+            </div>
+            <div class="content">
+              <div class="meta">
+                <h4 style="margin:0">Jackaroo (Card Games)</h4>
+                <span class="tag">Mobile</span>
+              </div>
+              <p class="muted">Online Jackaroo board & card game with real-time multiplayer, private rooms, and ranked play.</p>
+              <div class="tags">
+                <span class="tag">Unity</span>
+                <span class="tag">Multiplayer</span>
+                <span class="tag">Board/Card</span>
+              </div>
+              <div class="links" style="margin-top:10px">
+                <a class="btn" href="https://play.google.com/store/apps/details?id=com.jackaroo.card.games" target="_blank" rel="noopener">▶ Google Play</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="container">
+        <div class="section-title"><h3>Skills</h3><span class="muted">Core strengths</span></div>
+        <div class="grid cards">
+          <div class="card skill"><div class="content"><strong>Gameplay & Systems</strong><p class="muted">State machines, input, camera, AI perception, physics-lite custom controllers.</p><div class="tags"><span class="tag">C#</span><span class="tag">OOP</span><span class="tag">Design Patterns</span></div></div></div>
+          <div class="card skill"><div class="content"><strong>Rendering</strong><p class="muted">URP/HDRP, GPU instancing, batching, shaders, post-processing, light baking.</p><div class="tags"><span class="tag">URP</span><span class="tag">HLSL</span><span class="tag">Optimization</span></div></div></div>
+          <div class="card skill"><div class="content"><strong>Multiplayer</strong><p class="muted">Photon/Fusion, lag compensation, snapshot interpolation, room flow.</p><div class="tags"><span class="tag">Photon</span><span class="tag">Fusion</span><span class="tag">Netcode</span></div></div></div>
+          <div class="card skill"><div class="content"><strong>Tools & Pipelines</strong><p class="muted">Addressables, ScriptableObjects, CI builds, crash logging, profiling.</p><div class="tags"><span class="tag">Addressables</span><span class="tag">Editor Scripting</span><span class="tag">CI/CD</span></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience">
+      <div class="container">
+        <div class="section-title"><h3>Experience</h3><span class="muted">Recent roles</span></div>
+        <div class="xp">
+          <div class="xp-item">
+            <time>2025–Present</time>
+            <div>
+              <strong>Senior Unity Developer — Khaleef Technologies - Tapfire Studio</strong>
+              <p class="muted">Led a small team delivering mobile and WebGL titles. Built modular gameplay architecture, profiling to hit 60–120 FPS, integrated PlayFab backends.</p>
+              <div class="tags"><span class="tag">Leadership</span><span class="tag">PlayFab</span><span class="tag">Analytics</span></div>
+            </div>
+          </div>
+          <div class="xp-item">
+            <time>2023–2025</time>
+            <div>
+              <strong>Unity Game Developer — Big Immersive</strong>
+              <p class="muted">Prototyped 10+ game loops, integrated ad networks, and shipped 3 live-ops updates with live tuning and A/B tests.</p>
+              <div class="tags"><span class="tag">Live Ops</span><span class="tag">Ad Mediation</span><span class="tag">A/B</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="container">
+        <div class="section-title"><h3>Contact</h3><span class="muted">Let’s build something</span></div>
+        <div class="contact">
+          <div class="card panel">
+            <div class="content">
+              <h4 style="margin-top:0">Work With Me</h4>
+              <p class="muted">Email or DM me. I usually reply within 1–2 business days.</p>
+              <div class="tags" style="margin:12px 0 16px">
+                <a class="btn" href="mailto:muneeb.asif063@gmail.com">✉ Email</a>
+                <a class="btn" href="https://wa.me/+923125294620" target="_blank" rel="noopener">WhatsApp</a>
+              </div>
+              <small class="muted">Based in Pakistan • Available for UAE-friendly hours</small>
+            </div>
+          </div>
+          <div class="card panel">
+            <div class="content">
+              <h4 style="margin-top:0">Tech Stack</h4>
+              <div class="tags">
+                <span class="tag">Unity</span>
+                <span class="tag">C#</span>
+                <span class="tag">URP/HDRP</span>
+                <span class="tag">DOTween</span>
+                <span class="tag">Photon/Fusion</span>
+                <span class="tag">Addressables</span>
+                <span class="tag">PlayFab</span>
+                <span class="tag">Git</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <small>© <span id="year"></span> Muhammad Muneeb. All rights reserved.</small>
+      <div class="tags">
+        <a class="tag" href="#top">Back to top ↑</a>
+        <a class="tag" href="https://github.com/muneeb063" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click',e=>{
+        const id=a.getAttribute('href');
+        if(id.length>1){
+          e.preventDefault();
+          document.querySelector(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    });
+
+    // Year
+    document.getElementById('year').textContent=new Date().getFullYear();
+
+    // Theme toggle (guarded)
+    const root=document.documentElement;
+    const themeBtn=document.getElementById('themeToggle');
+    const saved=localStorage.getItem('theme');
+    if(saved==='light'){root.setAttribute('data-theme','light')}
+    if(themeBtn){
+      themeBtn.addEventListener('click',()=>{
+        const isLight=root.getAttribute('data-theme')==='light';
+        root.setAttribute('data-theme', isLight?'dark':'light');
+        localStorage.setItem('theme', isLight?'dark':'light');
+      });
+    }
+
+    // Mobile menu (guarded)
+    const menu=document.getElementById('menu');
+    const nav=document.getElementById('nav');
+    if(menu && nav){
+      menu.addEventListener('click',()=>nav.classList.toggle('open'));
+    }
+
+    // Project filtering with active state
+    (function () {
+      const grid = document.getElementById('projectGrid');
+      if (!grid) return;
+
+      const buttons = Array.from(document.querySelectorAll('[data-filter]'));
+      const cards = Array.from(grid.querySelectorAll('.project'));
+
+      function applyFilter(filter) {
+        cards.forEach(card => {
+          const tags = (card.dataset.tags || '').split(/\s+/);
+          const show = filter === 'all' || tags.includes(filter);
+          card.style.display = show ? 'flex' : 'none';
+        });
+      }
+
+      buttons.forEach(btn => {
+        btn.type = 'button';
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed','true');
+          applyFilter(btn.dataset.filter);
+        });
+      });
+
+      // Initialize to "All"
+      const allBtn = buttons.find(b => b.dataset.filter === 'all');
+      if (allBtn) allBtn.click();
+    })();
+  </script>
+</body>
+</html>
