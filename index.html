@@ -3,395 +3,354 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Muhammad Muneeb — Sr. Unity Developer</title>
-  <meta name="description" content="Single-page portfolio for a Unity developer. Projects, skills, and contact." />
-  <meta name="theme-color" content="#0ea5e9" />
-  <meta property="og:title" content="Muhammad Muneeb — Unity Developer" />
-  <meta property="og:description" content="Gameplay, tools, and mobile/PC builds. Available for remote work." />
+  <title>Muhammad Muneeb | Senior Game Engineer</title>
+  <meta name="description" content="Muhammad Muneeb, Senior Game Engineer. Multiplayer, AR and mobile games in Unity, plus the backends and tools behind them." />
+  <meta name="theme-color" content="#0a0a0b" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="canonical" href="https://muneeb063.github.io/" />
+  <meta property="og:title" content="Muhammad Muneeb | Senior Game Engineer" />
+  <meta property="og:description" content="Multiplayer, AR and mobile games in Unity, plus the backends and tools behind them. Open to remote roles and contracts." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://muneeb063.github.io/" />
   <meta property="og:image" content="https://muneeb063.github.io/images/profile-preview.jpeg" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' x='8' font-size='48'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23ff6a3d'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Arial' font-weight='700' font-size='26' fill='%23140804'%3EMM%3C/text%3E%3C/svg%3E" />
 
-  <style>
-    /* -------------------- RESET -------------------- */
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-    img,svg,video{display:block;max-width:100%}
-    input,button,textarea,select{font:inherit}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
+  <link rel="stylesheet" href="./assets/css/style.css" />
 
-    /* -------------------- THEME -------------------- */
-    :root{
-      --bg:#0b1020; --panel:#121a2f; --text:#e6edf6; --muted:#9fb0c6;
-      --brand:#0ea5e9; --brand-2:#22d3ee; --shadow:0 10px 30px rgba(2,8,23,.25);
-      --radius:18px;
-       --header-h: 72px;
-    }
-    [data-theme="light"]{
-      --bg:#f7fafc; --panel:#ffffff; --text:#0b1020; --muted:#42526b;
-      --shadow:0 10px 30px rgba(2,8,23,.12);
-    }
-    body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Noto Sans, Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 70% -10%, rgba(14,165,233,.15), transparent 50%),
-        radial-gradient(900px 600px at -20% 10%, rgba(34,211,238,.15), transparent 50%),
-        var(--bg);
-    }
-
-    /* -------------------- LAYOUT -------------------- */
-    .container{max-width:1100px;margin:0 auto;padding:0 20px}
-    /* header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(150%) blur(8px);background:linear-gradient(180deg,rgba(2,8,23,.75),rgba(2,8,23,.35),transparent)} */
-    header{position:fixed;top:0;left:0;width:100%;height:var(--header-h);z-index: 50;backdrop-filter:saturate(150%) blur(8px);background:linear-gradient(180deg,rgba(2,8,23,.75),rgba(2,8,23,.35),transparent)}
-    main {
-  padding-top: 20px;
-}
-    nav{display:flex;align-items:center;gap:16px;justify-content:space-between;padding:14px 0}
-    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
-    .brand .logo{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand),var(--brand-2));box-shadow:var(--shadow);font-weight:800}
-    .brand h1{font-size:18px;margin:0}
-    .nav-links{display:flex;gap:14px;align-items:center}
-    .nav-links a{color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:10px}
-    .nav-links a:hover{background:rgba(255,255,255,.06);color:var(--text)}
-    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.1);padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));color:var(--text);text-decoration:none;box-shadow:var(--shadow)}
-    .btn:hover{border-color:rgba(255,255,255,.25)}
-    .btn.primary{border:none;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#001018}
-
-    /* -------------------- HERO -------------------- */
-    .hero{padding:72px 0 40px}
-    .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:center}
-    .kicker{display:inline-block;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:rgba(14,165,233,.15);color:#9be9ff;border:1px solid rgba(34,211,238,.3)}
-    h2.display{font-size:44px;line-height:1.05;margin:8px 0 12px;letter-spacing:-.02em}
-    .muted{color:var(--muted)}
-    .hero .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-    .hero .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:18px}
-
-    /* -------------------- SECTIONS -------------------- */
-    section{padding:48px 0}
-    .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .section-title h3{margin:0;font-size:22px}
-    .grid{display:grid;gap:16px}
-    .grid.cards{grid-template-columns:repeat(12,1fr)}
-    .card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .card .content{padding:16px}
-    .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;color:var(--muted);cursor:pointer}
-    .tags{display:flex;gap:8px;flex-wrap:wrap}
-    .tag.active{background:var(--brand);border-color:var(--brand);color:#001018}
-
-    /* Project cards */
-    .project{grid-column:span 6;display:flex;flex-direction:column;overflow:hidden}
-    .project .thumb{aspect-ratio:16/9;overflow:hidden;background:linear-gradient(135deg,rgba(14,165,233,.15),rgba(34,211,238,.12));border-bottom:1px solid rgba(255,255,255,.08)}
-    .project .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .project .meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .project .links{display:flex;gap:8px;flex-wrap:wrap}
-
-    /* Skills */
-    .skill{grid-column:span 3;padding:14px}
-
-    /* Experience */
-    .xp{display:grid;gap:12px}
-    .xp-item{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:start;padding:12px;border:1px dashed rgba(255,255,255,.12);border-radius:14px}
-    .xp-item time{color:var(--muted)}
-
-    /* Contact */
-    .contact{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-    .contact .panel{padding:16px}
-
-    /* Footer */
-    footer{padding:26px 0 60px;color:var(--muted)}
-
-    /* Utilities */
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-
-    /* Responsive */
-    @media (max-width: 900px){
-      .hero-grid{grid-template-columns:1fr}
-      .project{grid-column:span 12}
-      .skill{grid-column:span 6}
-      .contact{grid-template-columns:1fr}
-      .xp-item{grid-template-columns:1fr}
-      nav .nav-links{display:none}
-      nav .nav-links.open{display:flex;flex-direction:column;position:absolute;top:62px;left:10px;right:10px;background:var(--panel);padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.12)}
-    }
-  </style>
+  <script>
+    // Motion classes are set before first paint so hidden-until-revealed states never flash.
+    (function () {
+      var root = document.documentElement;
+      root.classList.add('js');
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.add('motion');
+      // Safety net: if the scripts fail to load, show the page anyway.
+      setTimeout(function () { if (!window.__siteReady) root.classList.remove('motion', 'is-loading'); }, 6000);
+      root.classList.add('is-loading');
+    })();
+  </script>
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Person",
     "name": "Muhammad Muneeb",
-    "jobTitle": "Sr. Unity Developer",
-    "url": "https://your-github-username.github.io/",
+    "jobTitle": "Senior Game Engineer",
+    "url": "https://muneeb063.github.io/",
+    "image": "https://muneeb063.github.io/images/profile-preview.jpeg",
+    "email": "mailto:muneeb.asif063@gmail.com",
+    "address": { "@type": "PostalAddress", "addressLocality": "Lahore", "addressCountry": "PK" },
     "sameAs": [
-      "https://github.com/your-github-username",
-      "https://www.linkedin.com/in/your-handle/"
+      "https://github.com/muneeb063",
+      "https://www.linkedin.com/in/muhammad-muneeb-168395a1/"
     ],
-    "knowsAbout": ["Unity", "C#", "Mobile Games", "Rendering", "Multiplayer"],
-    "email": "mailto:muneeb.asif063@gmail.com"
+    "knowsAbout": ["Unity", "C#", "Multiplayer", "Photon Fusion", "PlayFab", "AR Foundation", "Mobile Games", "Game Performance Optimization"]
   }
   </script>
 </head>
 <body>
-  <a class="sr-only" href="#projects">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <header>
-    <div class="container">
-      <nav>
-        <a class="brand" href="#top" aria-label="Home">
-          <img src="https://muneeb063.github.io/images/profile-preview.jpeg" alt="M" 
-             style="width:48px;height:48px;object-fit:cover;border-radius:50%;border:2px solid #fff;">
-          <h1>Muhammad Muneeb</h1>
-        </a>
-        <div class="nav-links" id="nav">
-          <a href="#projects">Projects</a>
-          <a href="#skills">Skills</a>
-          <a href="#experience">Experience</a>
-          <a href="#contact">Contact</a>
-          <a href="./Muhammad_Muneeb_Resume.pdf" download>Download CV</a>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <!-- <button class="btn" id="themeToggle" aria-label="Toggle theme">🌓 Theme</button> -->
-          <button class="btn" id="menu" aria-label="Menu">☰</button>
-        </div>
-      </nav>
+  <!-- Background: WebGL smoke + particle scene, vignette, grain (all fixed, pointer-events none) -->
+  <canvas class="webgl" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Preloader -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader-row">
+      <span class="loader-name">Muhammad Muneeb</span>
+      <span class="loader-count"><span data-count>0</span>%</span>
     </div>
+    <div class="loader-line"><span></span></div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="nav" data-nav>
+    <a class="nav-brand" href="#top" aria-label="Muhammad Muneeb, back to top">
+      <img src="./images/profile-preview.jpeg" alt="" width="34" height="34" />
+      <span>Muneeb</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <span class="nav-indicator" aria-hidden="true"></span>
+      <a href="#projects" data-nav-link="projects">Work</a>
+      <a href="#skills" data-nav-link="skills">Skills</a>
+      <a href="#experience" data-nav-link="experience">Experience</a>
+      <a href="#contact" data-nav-link="contact">Contact</a>
+    </nav>
+    <a class="btn btn-primary btn-sm nav-cta" href="./Muhammad_Muneeb_Resume.pdf" download>
+      Resume <span class="btn-icon"><i class="ph-light ph-arrow-down"></i></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu" data-menu-toggle>
+      <span></span><span></span>
+    </button>
+    <span class="nav-progress" aria-hidden="true"><span></span></span>
   </header>
 
-  <main id="top">
+  <!-- Mobile menu -->
+  <div class="menu" id="menu" data-menu aria-hidden="true">
+    <nav aria-label="Mobile">
+      <a href="#projects" style="--i:0">Work</a>
+      <a href="#skills" style="--i:1">Skills</a>
+      <a href="#experience" style="--i:2">Experience</a>
+      <a href="#contact" style="--i:3">Contact</a>
+      <a href="./Muhammad_Muneeb_Resume.pdf" download style="--i:4">Resume</a>
+    </nav>
+    <p class="menu-foot" style="--i:5">muneeb.asif063@gmail.com</p>
+  </div>
+
+  <!-- Hover label for project media (fine pointers only) -->
+  <div class="cursor-pill" aria-hidden="true">Open <i class="ph-light ph-arrow-up-right"></i></div>
+
+  <main id="main">
     <!-- HERO -->
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <span class="kicker">Unity Developer • Gameplay • Rendering</span>
-          <h2 class="display">I build snappy, scalable Unity games for <span style="background:linear-gradient(135deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent">mobile & PC</span>.</h2>
-          <p class="muted">5+ years crafting gameplay, tools, and production pipelines. Experienced with URP/HRDP, optimization, and multiplayer (Photon/Fusion). Open to remote roles and contracting.</p>
-          <div class="actions">
-            <a class="btn primary" href="#projects">See Projects</a>
-            <a class="btn" href="mailto:muneeb.asif063@gmail.com">Email Me</a>
-            <a class="btn" href="https://github.com/muneeb063" target="_blank" rel="noopener">GitHub</a>
-            <a class="btn" href="https://www.linkedin.com/in/muhammad-muneeb-168395a1/" target="_blank" rel="noopener">LinkedIn</a>
-          </div>
-        </div>
-        <div class="card">
-          <div class="content">
-            <h3 style="margin:0 0 8px">Latest Build</h3>
-            <p class="muted" style="margin-top:0">Play or download.</p>
-            <div class="tags" style="margin:12px 0 14px">
-              <!-- <span class="tag">WebGL</span> -->
-              <span class="tag">Mobile</span>
-              <span class="tag">C#</span>
-              <span class="tag">URP</span>
-            </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <!-- <a class="btn primary" href="https://your-itch-username.itch.io/your-unity-game" target="_blank" rel="noopener">▶ Play WebGL</a> -->
-              <a class="btn" href="https://play.google.com/store/apps/details?id=com.genigames.color.match.train.sort.puzzle&hl=en" title="Android APK placeholder">⬇ Android APK</a>
-              <a class="btn" href="https://www.nitroleague.com/" title="Windows build placeholder">⬇ Windows EXE</a>
-            </div>
-          </div>
+    <section class="hero" id="top">
+      <div class="stage stage-hero" data-stage="0" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow hero-eyebrow" data-hero-fade>
+          <span class="eyebrow-line"></span><span data-scramble>Senior Game Engineer, Unity &amp; Backend</span>
+        </p>
+        <h1 class="hero-title" aria-label="Muhammad Muneeb">
+          <span class="line"><span class="line-inner" data-split>Muhammad</span></span>
+          <span class="line"><span class="line-inner" data-split>Muneeb</span></span>
+        </h1>
+        <p class="hero-sub" data-hero-fade>
+          I build multiplayer, AR and mobile games in Unity, from gameplay systems to the backends that keep them live.
+        </p>
+        <div class="hero-actions" data-hero-fade>
+          <a class="btn btn-primary" href="#projects" data-magnetic>
+            View work <span class="btn-icon"><i class="ph-light ph-arrow-up-right"></i></span>
+          </a>
+          <a class="btn btn-ghost" href="./Muhammad_Muneeb_Resume.pdf" download data-magnetic>
+            Resume <span class="btn-icon"><i class="ph-light ph-arrow-down"></i></span>
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- PROJECTS -->
-    <section id="projects">
-      <div class="container">
-        <div class="section-title">
-          <h3>Featured Projects</h3>
-          <div class="tags" aria-label="Filters">
-            <button class="tag active" data-filter="all" aria-pressed="true">All</button>
-            <button class="tag" data-filter="mobile" aria-pressed="false">Mobile</button>
-            <button class="tag" data-filter="pc" aria-pressed="false">PC</button>
-            <button class="tag" data-filter="ar" aria-pressed="false">AR</button>
-            <button class="tag" data-filter="social" aria-pressed="false">Social</button>
+    <!-- ABOUT -->
+    <section class="about" id="about">
+      <div class="container about-grid">
+        <div class="about-copy">
+          <p class="statement" data-words>
+            I'm Muneeb, a game engineer from Lahore. Since 2017 I have shipped racing, AR, puzzle, farming and card games
+            across mobile, PC and WebGL, and built the multiplayer, backend and tooling that hold them together.
+          </p>
+          <div class="stats">
+            <div class="stat">
+              <p class="stat-value"><span data-counter="40">40</span>%</p>
+              <p class="stat-label">less level-building time with custom Unity editor tools</p>
+            </div>
+            <div class="stat">
+              <p class="stat-value"><span data-counter="5">5</span>x</p>
+              <p class="stat-label">faster level creation for designers on internal tooling</p>
+            </div>
+            <div class="stat">
+              <p class="stat-value"><span data-counter="30">30</span>%</p>
+              <p class="stat-label">lower frame render times after CPU, GPU and memory profiling</p>
+            </div>
           </div>
         </div>
+        <div class="stage stage-about" data-stage="1" aria-hidden="true"></div>
+      </div>
+    </section>
 
-        <div class="grid cards" id="projectGrid">
-          <!-- Card: Nitro League -->
-          <article class="card project" data-tags="pc mobile web">
-            <div class="thumb">
-              <img src="./images/nitro-league.jpg" alt="Nitro League Screenshot">
-            </div>
-            <div class="content">
-              <div class="meta">
-                <h4 style="margin:0">Nitro League</h4>
-                <span class="tag">Racing Metaverse</span>
-              </div>
-              <p class="muted">Futuristic multiplayer racing set in a Web3-enabled world. Own & customize cars, race in events, and compete for leaderboard rewards.</p>
-              <div class="tags">
-                <span class="tag">Unity</span>
-                <span class="tag">PC & Mobile</span>
-                <span class="tag">Web3</span>
-              </div>
-              <div class="links" style="margin-top:10px">
-                <a class="btn" href="https://www.nitroleague.com/" target="_blank" rel="noopener">🌐 Website</a>
-                <a class="btn" href="https://www.nitroleague.com/" target="_blank" rel="noopener">⬇ Download</a>
-                <a class="btn" href="https://x.com/nitroleaguegame" target="_blank" rel="noopener">𝕏 Updates</a>
-              </div>
-            </div>
-          </article>
+    <!-- WORK: endless auto-scrolling rail -->
+    <section class="work" id="projects" aria-label="Selected work">
+      <div class="stage stage-work" data-stage="2" data-scale-mode="width" aria-hidden="true"></div>
+      <div class="container work-head">
+        <h2 class="display" data-heading>Selected <span class="soft">work</span></h2>
+        <div class="work-meta" data-reveal>
+          <p class="work-lede">Eight shipped titles and apps, from Web3 racing to AR sales tools.</p>
+          <p class="work-hint">
+            <i class="ph-light ph-hand-grabbing"></i>
+            <span class="hint-fine">Drag to explore, hover to pause</span>
+            <span class="hint-touch">Swipe to explore</span>
+          </p>
+        </div>
+      </div>
 
-          <!-- Card: RealityFence -->
-          <article class="card project" data-tags="mobile ar social">
-            <div class="thumb">
-              <img src="./images/realityfence.jpg" alt="RealityFence App Screenshot" loading="lazy" />
-            </div>
-            <div class="content">
-              <div class="meta">
-                <h4 style="margin:0">RealityFence</h4>
-                <span class="tag">AR Business</span>
-              </div>
-              <p class="muted">Augmented-reality tool that lets users visualize and configure fences in-place to boost on-the-spot sales. Built with AR and designed for ease of use and rapid decision-making.</p>
-              <div class="tags">
-                <span class="tag">iOS</span>
-                <span class="tag">AR & Mobile</span>
-                <span class="tag">Sales Tool</span>
-              </div>
-              <div class="links" style="margin-top:10px">
-                <a class="btn" href="https://apps.apple.com/pk/app/realityfence/id6453638654" target="_blank" rel="noopener">▶ App Store</a>
-                <a class="btn" href="https://www.realityfence.com/" target="_blank" rel="noopener">🌐 Website</a>
+      <div class="rail" data-rail>
+        <div class="rail-track" data-rail-track>
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://www.nitroleague.com/" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/nitro-league.jpg" alt="Nitro League race scene with futuristic cars" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>Nitro League</h3>
+                  <span class="project-kind">Racing metaverse</span>
+                </div>
+                <p>Multiplayer racing in a Web3 world. Players own and tune cars, enter events and race for leaderboard rewards.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>Unity</li><li>Photon</li><li>Node.js</li><li>PC &amp; Mobile</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://www.nitroleague.com/" target="_blank" rel="noopener">Website <i class="ph-light ph-arrow-up-right"></i></a>
+                  <a href="https://x.com/nitroleaguegame" target="_blank" rel="noopener">Updates on X <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- Swagr -->
-<article class="card project" data-tags="mobile ar social">
-  <div class="thumb">
-    <img src="./images/swagr.png" alt="Swagr App Screenshot" loading="lazy" />
-  </div>
-  <div class="content">
-    <div class="meta">
-      <h4 style="margin:0">Swagr</h4>
-      <span class="tag">AR</span>
-    </div>
-    <p class="muted">Gamified brand engagement app using AR to connect consumers with rewards and interactive challenges.</p>
-    <div class="tags">
-      <span class="tag">iOS</span>
-      <span class="tag">AR & Mobile</span>
-      <span class="tag">Brand Engagement</span>
-    </div>
-    <div class="links" style="margin-top:10px">
-      <a class="btn" href="https://apps.apple.com/pk/app/swagr/id6449583086" target="_blank" rel="noopener">▶ App Store</a>
-      <a class="btn" href="https://swagr.com/" target="_blank" rel="noopener">🌐 Website</a>
-    </div>
-  </div>
-</article>
-
-<!-- Card: LikeMan -->
-<article class="card project" data-tags="mobile social">
-  <div class="thumb">
-    <img src="./images/likeman.jpg" alt="LikeMan App Screenshot" loading="lazy" />
-  </div>
-  <div class="content">
-    <div class="meta">
-      <h4 style="margin:0">LikeMan</h4>
-      <span class="tag">Social Networking</span>
-    </div>
-    <p class="muted">
-      Social engagement platform designed to boost visibility and interactions on content through intuitive UI and gamified features.
-    </p>
-    <div class="tags">
-      <span class="tag">iOS</span>
-      <span class="tag">Android</span>
-      <span class="tag">Social</span>
-    </div>
-    <div class="links" style="margin-top:10px">
-      <a class="btn" href="https://www.cubix.co/work/likeman/" target="_blank" rel="noopener">🌐 Website</a>
-    </div>
-  </div>
-</article>
-
-<article class="card project" data-tags="pc web">
-  <div class="thumb">
-    <img src="./images/second-world.jpg" alt="Second World Game Screenshot" loading="lazy" />
-  </div>
-  <div class="content">
-    <div class="meta">
-      <h4 style="margin:0">Second World</h4>
-      <span class="tag">Metaverse</span>
-    </div>
-    <p class="muted">
-      A next-gen metaverse platform combining blockchain, immersive virtual environments, and user-generated content for a fully interactive social experience.
-    </p>
-    <div class="tags">
-      <span class="tag">Unity</span>
-      <span class="tag">PC</span>
-      <span class="tag">Blockchain</span>
-    </div>
-    <div class="links" style="margin-top:10px">
-      <a class="btn" href="https://www.cubix.co/work/second-world-case-study/" target="_blank" rel="noopener">🌐 Case Study</a>
-    </div>
-  </div>
-</article>
-
-
-
-          <!-- Card: My Perfect Farm -->
-          <article class="card project" data-tags="mobile">
-            <div class="thumb">
-              <img src="./images/my-perfect-farm.jpg" alt="My Perfect Farm Screenshot" loading="lazy" />
-            </div>
-            <div class="content">
-              <div class="meta">
-                <h4 style="margin:0">My Perfect Farm</h4>
-                <span class="tag">Mobile</span>
-              </div>
-              <p class="muted">A farming simulation game where you grow crops, raise animals, and manage your dream farm. Includes resource management, crafting, and seasonal events.</p>
-              <div class="tags">
-                <span class="tag">Unity</span>
-                <span class="tag">Simulation</span>
-                <span class="tag">Farming</span>
-              </div>
-              <div class="links" style="margin-top:10px">
-                <a class="btn" href="https://play.google.com/store/apps/details?id=com.elitegames.myperfectfarm" target="_blank" rel="noopener">▶ Google Play</a>
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://apps.apple.com/pk/app/realityfence/id6453638654" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/realityfence.jpg" alt="RealityFence app placing a virtual fence in a real yard" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>RealityFence</h3>
+                  <span class="project-kind">AR sales tool</span>
+                </div>
+                <p>AR app that lets contractors place and configure fences on site, so customers can decide on the spot.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>AR Foundation</li><li>Unity</li><li>iOS</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://apps.apple.com/pk/app/realityfence/id6453638654" target="_blank" rel="noopener">App Store <i class="ph-light ph-arrow-up-right"></i></a>
+                  <a href="https://www.realityfence.com/" target="_blank" rel="noopener">Website <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
               </div>
             </div>
           </article>
-          <!-- Card: Rail Frenzy (Color Sort Puzzle) -->
-<article class="card project" data-tags="mobile puzzle">
-  <div class="thumb">
-    <img src="./images/rail-frenzy.jpg" alt="Rail Frenzy Screenshot" />
-  </div>
-  <div class="content">
-    <div class="meta">
-      <h4 style="margin:0">Rail Frenzy: Color Sort Puzzle</h4>
-      <span class="tag">Mobile</span>
-    </div>
-    <p class="muted">
-  Match colors with rail blocks in this fast-paced, train-themed sorting puzzle. 
-  Test your speed and precision as you progress through challenging levels.
-</p>
-    <div class="tags">
-      <span class="tag">Unity</span>
-      <span class="tag">Puzzle</span>
-      <span class="tag">Sorting</span>
-    </div>
-    <div class="links" style="margin-top:10px">
-      <a class="btn" href="https://play.google.com/store/apps/details?id=com.genigames.color.match.train.sort.puzzle" target="_blank" rel="noopener">▶ Google Play</a>
-    </div>
-  </div>
-</article>
 
-
-          <!-- Card: Jackaroo (Card Games) -->
-          <article class="card project" data-tags="mobile">
-            <div class="thumb">
-              <img src="./images/jackaroo.jpg" alt="Jackaroo Card Games Screenshot" loading="lazy" />
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://apps.apple.com/pk/app/swagr/id6449583086" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/swagr.png" alt="Swagr AR rewards app" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>Swagr</h3>
+                  <span class="project-kind">AR rewards</span>
+                </div>
+                <p>Location-based AR rewards. Players find branded challenges in the real world and earn rewards for completing them.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>Lightship AR</li><li>Unity</li><li>iOS</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://apps.apple.com/pk/app/swagr/id6449583086" target="_blank" rel="noopener">App Store <i class="ph-light ph-arrow-up-right"></i></a>
+                  <a href="https://swagr.com/" target="_blank" rel="noopener">Website <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
+              </div>
             </div>
-            <div class="content">
-              <div class="meta">
-                <h4 style="margin:0">Jackaroo (Card Games)</h4>
-                <span class="tag">Mobile</span>
+          </article>
+
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://www.cubix.co/work/likeman/" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/likeman.jpg" alt="LikeMan social app" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>LikeMan</h3>
+                  <span class="project-kind">Social</span>
+                </div>
+                <p>Social engagement app that boosts visibility and interaction on posts through gamified features and a clean UI.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>iOS</li><li>Android</li><li>Gamification</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://www.cubix.co/work/likeman/" target="_blank" rel="noopener">Case study <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
               </div>
-              <p class="muted">Online Jackaroo board & card game with real-time multiplayer, private rooms, and ranked play.</p>
-              <div class="tags">
-                <span class="tag">Unity</span>
-                <span class="tag">Multiplayer</span>
-                <span class="tag">Board/Card</span>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://www.cubix.co/work/second-world-case-study/" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/second-world.jpg" alt="Second World metaverse environment" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>Second World</h3>
+                  <span class="project-kind">Metaverse</span>
+                </div>
+                <p>Blockchain metaverse with immersive virtual environments and user-generated content for social play.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>Unity</li><li>PC</li><li>Blockchain</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://www.cubix.co/work/second-world-case-study/" target="_blank" rel="noopener">Case study <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
               </div>
-              <div class="links" style="margin-top:10px">
-                <a class="btn" href="https://play.google.com/store/apps/details?id=com.jackaroo.card.games" target="_blank" rel="noopener">▶ Google Play</a>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://play.google.com/store/apps/details?id=com.elitegames.myperfectfarm" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/my-perfect-farm.jpg" alt="My Perfect Farm farming game scene" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>My Perfect Farm</h3>
+                  <span class="project-kind">Simulation</span>
+                </div>
+                <p>Farming sim with crops, animals, crafting, resource management and seasonal events.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>Unity</li><li>Android</li><li>Live events</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://play.google.com/store/apps/details?id=com.elitegames.myperfectfarm" target="_blank" rel="noopener">Google Play <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://play.google.com/store/apps/details?id=com.genigames.color.match.train.sort.puzzle" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/rail-frenzy.jpg" alt="Rail Frenzy color sorting train puzzle" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>Rail Frenzy</h3>
+                  <span class="project-kind">Puzzle</span>
+                </div>
+                <p>Train-themed color sort puzzle. Match rail blocks by color across levels built around speed and precision.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>Unity</li><li>Android</li><li>Puzzle</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://play.google.com/store/apps/details?id=com.genigames.color.match.train.sort.puzzle" target="_blank" rel="noopener">Google Play <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-card">
+              <span class="project-glare" aria-hidden="true"></span>
+              <a class="project-media" href="https://play.google.com/store/apps/details?id=com.jackaroo.card.games" target="_blank" rel="noopener" data-cursor>
+                <img src="./images/jackaroo.jpg" alt="Jackaroo online board and card game" loading="lazy" />
+              </a>
+              <div class="project-body">
+                <div class="project-head">
+                  <h3>Jackaroo</h3>
+                  <span class="project-kind">Board &amp; card</span>
+                </div>
+                <p>Online Jackaroo with real-time multiplayer, private rooms and ranked play.</p>
+                <ul class="chips" aria-label="Tech">
+                  <li>Unity</li><li>Multiplayer</li><li>Android</li>
+                </ul>
+                <div class="project-links">
+                  <a href="https://play.google.com/store/apps/details?id=com.jackaroo.card.games" target="_blank" rel="noopener">Google Play <i class="ph-light ph-arrow-up-right"></i></a>
+                </div>
               </div>
             </div>
           </article>
@@ -400,158 +359,178 @@
     </section>
 
     <!-- SKILLS -->
-    <section id="skills">
-      <div class="container">
-        <div class="section-title"><h3>Skills</h3><span class="muted">Core strengths</span></div>
-        <div class="grid cards">
-          <div class="card skill"><div class="content"><strong>Gameplay & Systems</strong><p class="muted">State machines, input, camera, AI perception, physics-lite custom controllers.</p><div class="tags"><span class="tag">C#</span><span class="tag">OOP</span><span class="tag">Design Patterns</span></div></div></div>
-          <div class="card skill"><div class="content"><strong>Rendering</strong><p class="muted">URP/HDRP, GPU instancing, batching, shaders, post-processing, light baking.</p><div class="tags"><span class="tag">URP</span><span class="tag">HLSL</span><span class="tag">Optimization</span></div></div></div>
-          <div class="card skill"><div class="content"><strong>Multiplayer</strong><p class="muted">Photon/Fusion, lag compensation, snapshot interpolation, room flow.</p><div class="tags"><span class="tag">Photon</span><span class="tag">Fusion</span><span class="tag">Netcode</span></div></div></div>
-          <div class="card skill"><div class="content"><strong>Tools & Pipelines</strong><p class="muted">Addressables, ScriptableObjects, CI builds, crash logging, profiling.</p><div class="tags"><span class="tag">Addressables</span><span class="tag">Editor Scripting</span><span class="tag">CI/CD</span></div></div></div>
+    <section class="skills" id="skills">
+      <div class="container skills-grid">
+        <div class="skills-main">
+          <h2 class="display" data-heading>What I bring <span class="soft">to a team</span></h2>
+          <ol class="caps">
+            <li class="cap">
+              <span class="cap-num">01</span>
+              <div class="cap-body">
+                <h3>Gameplay systems</h3>
+                <p>State machines, input, cameras, AI and custom physics controllers on clean SOLID and MVC architecture.</p>
+              </div>
+              <i class="ph-light ph-arrow-right cap-arrow" aria-hidden="true"></i>
+            </li>
+            <li class="cap">
+              <span class="cap-num">02</span>
+              <div class="cap-body">
+                <h3>Multiplayer &amp; netcode</h3>
+                <p>Photon Fusion and Netcode for GameObjects, custom matchmaking, lag compensation and room flow.</p>
+              </div>
+              <i class="ph-light ph-arrow-right cap-arrow" aria-hidden="true"></i>
+            </li>
+            <li class="cap">
+              <span class="cap-num">03</span>
+              <div class="cap-body">
+                <h3>Backend &amp; live ops</h3>
+                <p>PlayFab and Firebase for player data, leaderboards and in-game economy, plus REST APIs and Node.js on AWS.</p>
+              </div>
+              <i class="ph-light ph-arrow-right cap-arrow" aria-hidden="true"></i>
+            </li>
+            <li class="cap">
+              <span class="cap-num">04</span>
+              <div class="cap-body">
+                <h3>AR &amp; XR</h3>
+                <p>AR Foundation, Niantic Lightship and XR Interaction Toolkit for location-based and in-place AR.</p>
+              </div>
+              <i class="ph-light ph-arrow-right cap-arrow" aria-hidden="true"></i>
+            </li>
+            <li class="cap">
+              <span class="cap-num">05</span>
+              <div class="cap-body">
+                <h3>Rendering &amp; performance</h3>
+                <p>URP and HDRP, shaders, batching and texture compression, with CPU, GPU and memory profiling to hit frame targets.</p>
+              </div>
+              <i class="ph-light ph-arrow-right cap-arrow" aria-hidden="true"></i>
+            </li>
+            <li class="cap">
+              <span class="cap-num">06</span>
+              <div class="cap-body">
+                <h3>Tools &amp; pipelines</h3>
+                <p>Custom Unity editor tools, Addressables, ScriptableObject workflows and GitHub CI builds.</p>
+              </div>
+              <i class="ph-light ph-arrow-right cap-arrow" aria-hidden="true"></i>
+            </li>
+          </ol>
+        </div>
+        <div class="stage stage-skills" data-stage="3" aria-hidden="true"></div>
+      </div>
+
+      <div class="marquee" aria-label="Tech stack">
+        <div class="marquee-track">
+          <ul>
+            <li>Unity</li><li>C#</li><li>Photon Fusion</li><li>Netcode for GameObjects</li><li>URP</li><li>HDRP</li>
+            <li>AR Foundation</li><li>Lightship</li><li>XR Interaction Toolkit</li><li>PlayFab</li><li>Firebase</li>
+            <li>AWS</li><li>Node.js</li><li>TypeScript</li><li>Addressables</li><li>DOTween</li><li>Git</li><li>GitHub CI</li>
+          </ul>
+          <ul aria-hidden="true">
+            <li>Unity</li><li>C#</li><li>Photon Fusion</li><li>Netcode for GameObjects</li><li>URP</li><li>HDRP</li>
+            <li>AR Foundation</li><li>Lightship</li><li>XR Interaction Toolkit</li><li>PlayFab</li><li>Firebase</li>
+            <li>AWS</li><li>Node.js</li><li>TypeScript</li><li>Addressables</li><li>DOTween</li><li>Git</li><li>GitHub CI</li>
+          </ul>
         </div>
       </div>
     </section>
 
     <!-- EXPERIENCE -->
-    <section id="experience">
-      <div class="container">
-        <div class="section-title"><h3>Experience</h3><span class="muted">Recent roles</span></div>
-        <div class="xp">
-          <div class="xp-item">
-            <time>2025–Present</time>
-            <div>
-              <strong>Senior Unity Developer — Khaleef Technologies - Tapfire Studio</strong>
-              <p class="muted">Led a small team delivering mobile and WebGL titles. Built modular gameplay architecture, profiling to hit 60–120 FPS, integrated PlayFab backends.</p>
-              <div class="tags"><span class="tag">Leadership</span><span class="tag">PlayFab</span><span class="tag">Analytics</span></div>
-            </div>
+    <section class="experience" id="experience">
+      <div class="container xp-grid">
+        <div class="xp-side">
+          <div class="xp-sticky">
+            <h2 class="display" data-heading>Five studios <span class="soft">since 2017</span></h2>
+            <div class="stage stage-xp" data-stage="4" aria-hidden="true"></div>
           </div>
-          <div class="xp-item">
-            <time>2023–2025</time>
-            <div>
-              <strong>Unity Game Developer — Big Immersive</strong>
-              <p class="muted">Prototyped 10+ game loops, integrated ad networks, and shipped 3 live-ops updates with live tuning and A/B tests.</p>
-              <div class="tags"><span class="tag">Live Ops</span><span class="tag">Ad Mediation</span><span class="tag">A/B</span></div>
-            </div>
-          </div>
+        </div>
+        <div class="xp-list">
+          <div class="xp-line" aria-hidden="true"><span></span></div>
+
+          <article class="xp-item" data-reveal>
+            <p class="xp-date">Apr 2025 - Present</p>
+            <h3>Senior Game Engineer</h3>
+            <p class="xp-company">Khaleef Technologies, Tapfire Studio <span>Lahore</span></p>
+            <p class="xp-text">Leading simulation and arcade games on Photon Fusion and URP/HDRP. Built custom matchmaking and lag compensation, PlayFab economy and leaderboards, and editor tools that cut level creation time by 40%. Mentoring junior developers.</p>
+            <ul class="chips"><li>Photon Fusion</li><li>PlayFab</li><li>Editor tools</li><li>Mentoring</li></ul>
+          </article>
+
+          <article class="xp-item" data-reveal>
+            <p class="xp-date">Jun 2023 - Mar 2025</p>
+            <h3>Senior Game Engineer</h3>
+            <p class="xp-company">Big Immersive <span>Lahore</span></p>
+            <p class="xp-text">Designed core gameplay architecture and led a cross-functional team across several Unity projects. Shipped editor tooling that made level creation 5x faster, REST save/load, and profiling passes that cut frame render times by up to 30%.</p>
+            <ul class="chips"><li>Architecture</li><li>REST APIs</li><li>Profiling</li><li>Team lead</li></ul>
+          </article>
+
+          <article class="xp-item" data-reveal>
+            <p class="xp-date">Jan 2021 - Jun 2023</p>
+            <h3>Game Engineer</h3>
+            <p class="xp-company">Tkxel <span>Lahore</span></p>
+            <p class="xp-text">Built game mechanics and UI integration, upgraded legacy Unity projects to current engine versions, and reduced draw calls through batching and texture compression.</p>
+            <ul class="chips"><li>Gameplay</li><li>UI/UX</li><li>Optimization</li></ul>
+          </article>
+
+          <article class="xp-item" data-reveal>
+            <p class="xp-date">May 2020 - Dec 2020</p>
+            <h3>Game Engineer</h3>
+            <p class="xp-company">CrossHair Technology <span>Lahore</span></p>
+            <p class="xp-text">Shipped Android games across many resolutions and device profiles, with in-app purchases and analytics tracking.</p>
+            <ul class="chips"><li>Android</li><li>IAP</li><li>Analytics</li></ul>
+          </article>
+
+          <article class="xp-item" data-reveal>
+            <p class="xp-date">Oct 2017 - Apr 2020</p>
+            <h3>Junior Game Engineer</h3>
+            <p class="xp-company">Clustox <span>Lahore</span></p>
+            <p class="xp-text">Built physics systems and texture streaming for performance, plus progression, power-ups and monetization mechanics.</p>
+            <ul class="chips"><li>Physics</li><li>Progression</li><li>Monetization</li></ul>
+          </article>
+
+          <article class="xp-item xp-edu" data-reveal>
+            <p class="xp-date">2013 - 2017</p>
+            <h3>BS Business &amp; Information Technology</h3>
+            <p class="xp-company">University of the Punjab <span>Lahore</span></p>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- CONTACT -->
-    <section id="contact">
-      <div class="container">
-        <div class="section-title"><h3>Contact</h3><span class="muted">Let’s build something</span></div>
-        <div class="contact">
-          <div class="card panel">
-            <div class="content">
-              <h4 style="margin-top:0">Work With Me</h4>
-              <p class="muted">Email or DM me. I usually reply within 1–2 business days.</p>
-              <div class="tags" style="margin:12px 0 16px">
-                <a class="btn" href="mailto:muneeb.asif063@gmail.com">✉ Email</a>
-                <a class="btn" href="https://wa.me/+923125294620" target="_blank" rel="noopener">WhatsApp</a>
-              </div>
-              <small class="muted">Based in Pakistan • Available for UAE-friendly hours</small>
-            </div>
+    <section class="contact" id="contact">
+      <div class="container contact-grid">
+        <div class="contact-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span><span data-scramble>Open to remote roles and contracts</span></p>
+          <h2 class="contact-title" data-heading>Let's make it <span class="accent">playable.</span></h2>
+          <button class="email" type="button" data-copy="muneeb.asif063@gmail.com" data-reveal>
+            <span class="email-address">muneeb.asif063@gmail.com</span>
+            <span class="email-state" aria-live="polite"><i class="ph-light ph-copy"></i><span data-copy-label>Copy</span></span>
+          </button>
+          <div class="contact-links" data-reveal>
+            <a class="btn btn-primary" href="mailto:muneeb.asif063@gmail.com" data-magnetic>Email <span class="btn-icon"><i class="ph-light ph-paper-plane-tilt"></i></span></a>
+            <a class="btn btn-ghost" href="https://wa.me/923125294620" target="_blank" rel="noopener" data-magnetic>WhatsApp <span class="btn-icon"><i class="ph-light ph-whatsapp-logo"></i></span></a>
+            <a class="btn btn-ghost" href="https://www.linkedin.com/in/muhammad-muneeb-168395a1/" target="_blank" rel="noopener" data-magnetic>LinkedIn <span class="btn-icon"><i class="ph-light ph-linkedin-logo"></i></span></a>
+            <a class="btn btn-ghost" href="https://github.com/muneeb063" target="_blank" rel="noopener" data-magnetic>GitHub <span class="btn-icon"><i class="ph-light ph-github-logo"></i></span></a>
           </div>
-          <div class="card panel">
-            <div class="content">
-              <h4 style="margin-top:0">Tech Stack</h4>
-              <div class="tags">
-                <span class="tag">Unity</span>
-                <span class="tag">C#</span>
-                <span class="tag">URP/HDRP</span>
-                <span class="tag">DOTween</span>
-                <span class="tag">Photon/Fusion</span>
-                <span class="tag">Addressables</span>
-                <span class="tag">PlayFab</span>
-                <span class="tag">Git</span>
-              </div>
-            </div>
-          </div>
+          <p class="contact-note" data-reveal>Based in Lahore, Pakistan. Available for UAE-friendly hours. I usually reply within 1 to 2 business days.</p>
+        </div>
+        <div class="portal">
+          <div class="stage stage-contact" data-stage="5" data-scale="0.74" aria-hidden="true"></div>
+          <img src="./images/profile-preview.jpeg" alt="Portrait of Muhammad Muneeb" loading="lazy" />
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <small>© <span id="year"></span> Muhammad Muneeb. All rights reserved.</small>
-      <div class="tags">
-        <a class="tag" href="#top">Back to top ↑</a>
-        <a class="tag" href="https://github.com/muneeb063" target="_blank" rel="noopener">GitHub</a>
-      </div>
+  <footer class="footer">
+    <div class="container footer-row">
+      <p>&copy; <span data-year>2026</span> Muhammad Muneeb</p>
+      <a class="footer-top" href="#top">Back to top <i class="ph-light ph-arrow-up"></i></a>
     </div>
   </footer>
 
-  <script>
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(a=>{
-      a.addEventListener('click',e=>{
-        const id=a.getAttribute('href');
-        if(id.length>1){
-          e.preventDefault();
-          document.querySelector(id)?.scrollIntoView({behavior:'smooth',block:'start'});
-        }
-      });
-    });
-
-    // Year
-    document.getElementById('year').textContent=new Date().getFullYear();
-
-    // Theme toggle (guarded)
-    const root=document.documentElement;
-    const themeBtn=document.getElementById('themeToggle');
-    const saved=localStorage.getItem('theme');
-    if(saved==='light'){root.setAttribute('data-theme','light')}
-    if(themeBtn){
-      themeBtn.addEventListener('click',()=>{
-        const isLight=root.getAttribute('data-theme')==='light';
-        root.setAttribute('data-theme', isLight?'dark':'light');
-        localStorage.setItem('theme', isLight?'dark':'light');
-      });
-    }
-
-    // Mobile menu (guarded)
-    const menu=document.getElementById('menu');
-    const nav=document.getElementById('nav');
-    if(menu && nav){
-      menu.addEventListener('click',()=>nav.classList.toggle('open'));
-    }
-
-    // Project filtering with active state
-    (function () {
-      const grid = document.getElementById('projectGrid');
-      if (!grid) return;
-
-      const buttons = Array.from(document.querySelectorAll('[data-filter]'));
-      const cards = Array.from(grid.querySelectorAll('.project'));
-
-      function applyFilter(filter) {
-        cards.forEach(card => {
-          const tags = (card.dataset.tags || '').split(/\s+/);
-          const show = filter === 'all' || tags.includes(filter);
-          card.style.display = show ? 'flex' : 'none';
-        });
-      }
-
-      buttons.forEach(btn => {
-        btn.type = 'button';
-        btn.addEventListener('click', () => {
-          buttons.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
-          btn.classList.add('active');
-          btn.setAttribute('aria-pressed','true');
-          applyFilter(btn.dataset.filter);
-        });
-      });
-
-      // Initialize to "All"
-      const allBtn = buttons.find(b => b.dataset.filter === 'all');
-      if (allBtn) allBtn.click();
-    })();
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script src="./assets/js/scene.js" defer></script>
+  <script src="./assets/js/main.js" defer></script>
 </body>
 </html>
-
-
-
-
