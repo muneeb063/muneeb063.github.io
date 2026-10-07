@@ -401,7 +401,13 @@ main { position: relative; z-index: 2; }
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 .project-media img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); }
-@media (hover: hover) and (pointer: fine) { .motion .project-media { cursor: none; } }
+/* With motion on, the whole card is one target: the "Open" label replaces the cursor everywhere
+   on it except its own store links. The drag hand only shows in the gaps between cards. */
+@media (hover: hover) and (pointer: fine) {
+  .motion .rail.is-looping .project-card,
+  .motion .rail.is-looping .project-card a { cursor: none; }
+  .motion .rail.is-looping .project-links a { cursor: pointer; }
+}
 .project-body { display: flex; flex-direction: column; gap: 12px; padding: 18px 14px 12px; }
 /* Genre label sits above the title (DOM order is title first for screen readers). */
 .project-head { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
@@ -477,7 +483,11 @@ main { position: relative; z-index: 2; }
 .web-tile.is-hover .project-glare { opacity: 1; }
 .web-tile.is-hover .project-head h3 { color: var(--accent); }
 .web-grid:has(.web-tile.is-hover) .web-tile:not(.is-hover) .web-card { opacity: 0.45; }
-@media (hover: hover) and (pointer: fine) { .motion .web-media { cursor: none; } }
+@media (hover: hover) and (pointer: fine) {
+  .motion .web-card,
+  .motion .web-card a { cursor: none; }
+  .motion .web-card a.web-play { cursor: pointer; }
+}
 
 @media (max-width: 640px) {
   .web-head { grid-template-columns: minmax(0, 1fr); }

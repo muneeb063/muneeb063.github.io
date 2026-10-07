@@ -395,17 +395,24 @@
       // Hover is resolved by hit-testing the last mouse position every frame, not by
       // pointerenter: cards slide under a still cursor and browsers send no events for that.
       if (!finePointer) return;
-      let project = null, overMedia = false;
+      let project = null, showLabel = false;
       if (mouse.on && !dragging) {
         const el = document.elementFromPoint(mouse.x, mouse.y);
         if (el && track.contains(el)) {
           project = el.closest('.project');
-          overMedia = !!el.closest('[data-cursor]');
+          // The whole card opens the game; only its own store links get the normal pointer.
+          showLabel = !!project && !el.closest('.project-links a');
         }
       }
       setHovered(project);
       if (hovered) cardTilt(hovered).move(mouse.x, mouse.y);
-      if (overMedia) pill.show('Open', 'rail'); else pill.hide('rail');
+      if (showLabel) pill.show('Open', 'rail'); else pill.hide('rail');
+    });
+
+    // Clicking anywhere on a card (outside its own links) opens its main link.
+    track.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.target.closest('a')) return;
+      e.target.closest('.project-card')?.querySelector('[data-cursor]')?.click();
     });
 
     // Drag (mouse and touch). Vertical page scroll stays native thanks to touch-action: pan-y.
@@ -473,6 +480,12 @@
       onEnter: () => gsap.to(tiles, { y: 0, opacity: 1, rotateX: 0, duration: 1.3, ease: 'expo.out', stagger: 0.12 }),
     });
 
+    // Clicking anywhere on a tile (outside its Play button) starts the game.
+    tiles.forEach((tile) => tile.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      tile.querySelector('[data-cursor]')?.click();
+    }));
+
     if (!finePointer) return;
     tiles.forEach((tile) => {
       const tilt = cardTilt(tile);
@@ -480,7 +493,7 @@
       tile.addEventListener('pointermove', (e) => {
         if (e.pointerType !== 'mouse') return;
         tilt.move(e.clientX, e.clientY);
-        if (e.target.closest('[data-cursor]')) pill.show('Play', 'web'); else pill.hide('web');
+        if (e.target.closest('.web-play')) pill.hide('web'); else pill.show('Play', 'web');
       });
       tile.addEventListener('pointerleave', () => { tilt.leave(); pill.hide('web'); });
     });
