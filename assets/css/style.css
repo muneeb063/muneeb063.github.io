@@ -403,7 +403,8 @@ main { position: relative; z-index: 2; }
 .project-media img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); }
 @media (hover: hover) and (pointer: fine) { .motion .project-media { cursor: none; } }
 .project-body { display: flex; flex-direction: column; gap: 12px; padding: 18px 14px 12px; }
-.project-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+/* Genre label sits above the title (DOM order is title first for screen readers). */
+.project-head { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
 .project-head h3 {
   font-family: var(--font-display); font-weight: 700; font-stretch: 80%;
   font-size: clamp(1.6rem, 2.1vw, 2.1rem); line-height: 1; letter-spacing: -0.01em;
@@ -426,6 +427,63 @@ main { position: relative; z-index: 2; }
 @media (hover: hover) and (pointer: fine) {
   .project-links a:hover::after { transform: scaleX(1); opacity: 1; }
   .project-links a:hover i { transform: translate(2px, -2px); }
+}
+
+/* ---------- Web games: bento of browser builds ---------- */
+.web { position: relative; padding: calc(var(--section-y) * 0.5) 0 0; }
+.web-head {
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(24px, 4vw, 64px); align-items: center;
+  margin-bottom: clamp(28px, 5vh, 56px);
+}
+.web-intro { display: flex; flex-direction: column; gap: 22px; }
+.web-lede { max-width: 46ch; color: var(--muted); font-size: 17px; }
+.stage-web { width: 100%; max-width: 420px; aspect-ratio: 1; justify-self: center; }
+
+/* Two even columns; the right column drops down for a staggered rhythm, covers stay whole. */
+.web-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2.4vw, 36px);
+  align-items: start;
+}
+.web-tile { min-width: 0; }
+.web-tile:nth-child(even) { margin-top: clamp(32px, 9vh, 96px); }
+.web-card {
+  position: relative; height: 100%;
+  display: flex; flex-direction: column;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: linear-gradient(180deg, rgba(22, 22, 25, 0.92), rgba(14, 14, 16, 0.9));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px -30px rgba(0, 0, 0, 0.7);
+  transition: opacity 500ms var(--ease-out), border-color 400ms ease, box-shadow 500ms ease;
+  will-change: transform;
+}
+.web-media {
+  position: relative; display: block; overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-inner);
+  background: var(--surface-2);
+}
+.web-media img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); }
+.web-body { display: flex; flex-direction: column; gap: 12px; padding: 18px 14px 12px; }
+.web-body > p { color: var(--muted); font-size: 15px; line-height: 1.5; }
+.web-play { align-self: flex-start; margin-top: 2px; }
+.web-tile.is-hover .web-card {
+  border-color: rgba(255, 106, 61, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 40px 90px -30px rgba(255, 106, 61, 0.32);
+}
+.web-tile.is-hover .project-glare { opacity: 1; }
+.web-tile.is-hover .project-head h3 { color: var(--accent); }
+.web-grid:has(.web-tile.is-hover) .web-tile:not(.is-hover) .web-card { opacity: 0.45; }
+@media (hover: hover) and (pointer: fine) { .motion .web-media { cursor: none; } }
+
+@media (max-width: 640px) {
+  .web-head { grid-template-columns: minmax(0, 1fr); }
+  .stage-web { order: -1; max-width: none; aspect-ratio: auto; height: 62vw; max-height: 340px; }
+  .web-grid { grid-template-columns: minmax(0, 1fr); }
+  .web-tile:nth-child(even) { margin-top: 0; }
 }
 
 /* ---------- Skills ---------- */

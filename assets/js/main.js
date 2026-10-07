@@ -62,11 +62,78 @@
   const nav = document.querySelector('[data-nav]');
   let autoScrolling = false;
 
+  /* ---------- Shared pointer state (mouse only) ---------- */
+  const mouse = { x: -1, y: -1, on: false };
+  window.addEventListener('pointermove', (e) => {
+    mouse.on = e.pointerType === 'mouse';
+    mouse.x = e.clientX; mouse.y = e.clientY;
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { mouse.on = false; });
+  window.addEventListener('blur', () => { mouse.on = false; });
+
+  /* ---------- Cursor label ("Open" / "Play"), owned by whichever section shows it ---------- */
+  const pill = (() => {
+    const el = document.querySelector('.cursor-pill');
+    const label = el?.querySelector('[data-pill-label]');
+    const enabled = !!el && finePointer && !reduced;
+    let owner = null, text = '';
+    return {
+      show(t, who) {
+        if (!enabled || (owner === who && text === t)) return;
+        owner = who;
+        if (t !== text) { text = t; label.textContent = t; }
+        gsap.to(el, { opacity: 1, scale: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+      },
+      hide(who) {
+        if (!enabled || owner !== who) return;
+        owner = null;
+        gsap.to(el, { opacity: 0, scale: 0.5, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
+      },
+    };
+  })();
+
+  /* ---------- Card hover: lift, tilt toward the cursor, glare, image drift ---------- */
+  const tilts = new WeakMap();
+  function cardTilt(wrapper) {
+    let t = tilts.get(wrapper);
+    if (t) return t;
+    const card = wrapper.querySelector('[data-tilt]');
+    const img = wrapper.querySelector('img');
+    gsap.set(card, { transformPerspective: 900 });
+    const q = (el, prop, d) => gsap.quickTo(el, prop, { duration: d, ease: 'power3' });
+    const rx = q(card, 'rotationX', 0.6), ry = q(card, 'rotationY', 0.6);
+    const ix = q(img, 'xPercent', 0.8), iy = q(img, 'yPercent', 0.8);
+    t = {
+      enter() {
+        wrapper.classList.add('is-hover');
+        gsap.to(card, { y: -14, scale: 1.025, duration: 0.6, ease: 'expo.out', overwrite: 'auto' });
+        gsap.to(img, { scale: 1.12, duration: 1.2, ease: 'expo.out', overwrite: 'auto' });
+      },
+      move(cx, cy) {
+        const r = card.getBoundingClientRect();
+        const px = gsap.utils.clamp(-0.5, 0.5, (cx - r.left) / r.width - 0.5);
+        const py = gsap.utils.clamp(-0.5, 0.5, (cy - r.top) / r.height - 0.5);
+        rx(-py * 9); ry(px * 11); ix(-px * 4); iy(-py * 4);
+        card.style.setProperty('--mx', `${(px + 0.5) * 100}%`);
+        card.style.setProperty('--my', `${(py + 0.5) * 100}%`);
+      },
+      leave() {
+        wrapper.classList.remove('is-hover');
+        rx(0); ry(0); ix(0); iy(0);
+        gsap.to(card, { y: 0, scale: 1, duration: 0.7, ease: 'expo.out', overwrite: 'auto' });
+        gsap.to(img, { scale: 1.02, duration: 0.9, ease: 'expo.out', overwrite: 'auto' });
+      },
+    };
+    tilts.set(wrapper, t);
+    return t;
+  }
+
   bindMenu(lenis);
   bindEmail();
   splitHero();
   splitHeadings();
   buildRail();
+  buildWebGames();
   buildMarquee();
   buildMorph();
   buildReveals();
@@ -157,19 +224,20 @@
         ease: 'expo.out',
       });
     };
-    links.forEach((link) => {
-      const section = document.getElementById(link.dataset.navLink);
-      if (!section) return;
-      ScrollTrigger.create({
-        trigger: section,
-        start: 'top 55%',
-        end: 'bottom 55%',
-        onToggle: (self) => {
-          if (self.isActive) moveTo(link);
-          else if (current === link) moveTo(null);
-        },
+    // Active link = the section crossing 55% of the viewport, read from live geometry on every
+    // scroll update (toggle callbacks drift when the browser restores an old scroll position).
+    const sections = links.map((link) => document.getElementById(link.dataset.navLink));
+    const syncActive = () => {
+      const line = window.innerHeight * 0.55;
+      let found = null;
+      sections.forEach((section, i) => {
+        if (!section) return;
+        const r = section.getBoundingClientRect();
+        if (r.top <= line && r.bottom > line) found = links[i];
       });
-    });
+      moveTo(found);
+    };
+    ScrollTrigger.create({ start: 0, end: 'max', onUpdate: syncActive, onRefresh: syncActive });
     window.addEventListener('resize', () => { if (current) gsap.set(indicator, { x: current.offsetLeft, width: current.offsetWidth }); });
   }
 
@@ -264,13 +332,15 @@
 
     const originals = [...track.children];
     originals.forEach((card) => {
+      // Copies stay clickable (not inert); they are only hidden from screen readers and Tab.
       const clone = card.cloneNode(true);
       clone.setAttribute('aria-hidden', 'true');
-      clone.inert = true;
+      clone.querySelectorAll('a').forEach((a) => a.setAttribute('tabindex', '-1'));
       track.appendChild(clone);
     });
     rail.classList.add('is-looping');
-    track.querySelectorAll('img').forEach((img) => { img.draggable = false; });
+    // Native link/image dragging would hijack the rail drag.
+    track.querySelectorAll('a, img').forEach((el) => { el.draggable = false; });
 
     let setWidth = 1;
     const measure = () => {
@@ -283,13 +353,29 @@
     const BASE = finePointer ? 46 : 34; // px per second
     let x = 0, dir = -1, hover = 0, hoverTarget = 0, skew = 0;
     let dragging = false, dragVel = 0, lastX = 0, lastT = 0, moved = 0, active = true, captured = false;
+    let hovered = null;
 
-    ScrollTrigger.create({ trigger: rail, start: 'top bottom', end: 'bottom top', onToggle: (s) => { active = s.isActive; } });
+    const setHovered = (project) => {
+      if (project === hovered) return;
+      if (hovered) cardTilt(hovered).leave();
+      hovered = project;
+      if (hovered) cardTilt(hovered).enter();
+      hoverTarget = hovered ? 1 : 0;
+      rail.classList.toggle('has-hover', !!hovered);
+    };
+
+    ScrollTrigger.create({
+      trigger: rail, start: 'top bottom', end: 'bottom top',
+      onToggle: (s) => {
+        active = s.isActive;
+        if (!active) { setHovered(null); pill.hide('rail'); }
+      },
+    });
 
     gsap.ticker.add((_, deltaMs) => {
       if (!active) return;
       const dt = Math.min(deltaMs / 1000, 0.05);
-      hover += (hoverTarget - hover) * (1 - Math.exp(-dt * 5));
+      hover += (hoverTarget - hover) * (1 - Math.exp(-dt * (hoverTarget ? 10 : 4)));
       const sv = scrollVelocity();
       if (Math.abs(sv) > 0.4) dir = sv > 0 ? -1 : 1;
       const boost = 1 + Math.min(Math.abs(sv) * 0.14, 7);
@@ -305,6 +391,21 @@
       const targetSkew = gsap.utils.clamp(-7, 7, (Math.abs(v) > BASE * 1.6 ? v : 0) * -0.006);
       skew += (targetSkew - skew) * (1 - Math.exp(-dt * 6));
       track.style.transform = `translate3d(${x.toFixed(2)}px,0,0) skewX(${skew.toFixed(3)}deg)`;
+
+      // Hover is resolved by hit-testing the last mouse position every frame, not by
+      // pointerenter: cards slide under a still cursor and browsers send no events for that.
+      if (!finePointer) return;
+      let project = null, overMedia = false;
+      if (mouse.on && !dragging) {
+        const el = document.elementFromPoint(mouse.x, mouse.y);
+        if (el && track.contains(el)) {
+          project = el.closest('.project');
+          overMedia = !!el.closest('[data-cursor]');
+        }
+      }
+      setHovered(project);
+      if (hovered) cardTilt(hovered).move(mouse.x, mouse.y);
+      if (overMedia) pill.show('Open', 'rail'); else pill.hide('rail');
     });
 
     // Drag (mouse and touch). Vertical page scroll stays native thanks to touch-action: pan-y.
@@ -335,51 +436,18 @@
     rail.addEventListener('pointercancel', endDrag);
     rail.addEventListener('click', (e) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
 
-    // Hover: the rail eases to a stop, the card lifts and tilts toward the cursor.
-    track.querySelectorAll('.project').forEach((project) => {
-      const card = project.querySelector('.project-card');
-      const img = project.querySelector('.project-media img');
-      gsap.set(card, { transformPerspective: 900 });
-      const rx = gsap.quickTo(card, 'rotationX', { duration: 0.6, ease: 'power3' });
-      const ry = gsap.quickTo(card, 'rotationY', { duration: 0.6, ease: 'power3' });
-      const ix = gsap.quickTo(img, 'xPercent', { duration: 0.8, ease: 'power3' });
-      const iy = gsap.quickTo(img, 'yPercent', { duration: 0.8, ease: 'power3' });
-
-      project.addEventListener('pointerenter', (e) => {
-        if (e.pointerType !== 'mouse') return;
-        hoverTarget = 1;
-        project.classList.add('is-hover');
-        rail.classList.add('has-hover');
-        gsap.to(card, { y: -14, scale: 1.025, duration: 0.6, ease: 'expo.out', overwrite: 'auto' });
-        gsap.to(img, { scale: 1.12, duration: 1.2, ease: 'expo.out' });
-      });
-      project.addEventListener('pointermove', (e) => {
-        if (e.pointerType !== 'mouse' || dragging) return;
-        const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width - 0.5;
-        const py = (e.clientY - r.top) / r.height - 0.5;
-        rx(-py * 9); ry(px * 11);
-        ix(-px * 4); iy(-py * 4);
-        card.style.setProperty('--mx', `${(px + 0.5) * 100}%`);
-        card.style.setProperty('--my', `${(py + 0.5) * 100}%`);
-      });
-      project.addEventListener('pointerleave', () => {
-        hoverTarget = 0;
-        project.classList.remove('is-hover');
-        rail.classList.remove('has-hover');
-        rx(0); ry(0); ix(0); iy(0);
-        gsap.to(card, { y: 0, scale: 1, duration: 0.7, ease: 'expo.out', overwrite: 'auto' });
-        gsap.to(img, { scale: 1.02, duration: 0.9, ease: 'expo.out' });
-      });
-    });
-
-    // Keyboard: pause and bring the focused card into view.
+    // Keyboard only: pause, and bring the focused card into view if it is off screen.
+    // (Mouse clicks also focus links; moving the rail then would make the click miss.)
     originals.forEach((project) => {
-      project.addEventListener('focusin', () => {
+      project.addEventListener('focusin', (e) => {
+        if (!e.target.matches(':focus-visible')) return;
         hoverTarget = 1;
-        x = -(project.offsetLeft - track.children[0].offsetLeft);
+        const r = project.getBoundingClientRect();
+        if (r.left < 0 || r.right > window.innerWidth) {
+          x = -(project.offsetLeft - track.children[0].offsetLeft);
+        }
       });
-      project.addEventListener('focusout', () => { hoverTarget = 0; });
+      project.addEventListener('focusout', () => { if (!rail.classList.contains('has-hover')) hoverTarget = 0; });
     });
 
     // Entrance: cards fly in from the right when the section arrives.
@@ -389,6 +457,32 @@
       start: 'top 85%',
       once: true,
       onEnter: () => gsap.to(originals, { xPercent: 0, opacity: 1, duration: 1.4, ease: 'expo.out', stagger: 0.08 }),
+    });
+  }
+
+  /* ---------- Web games: tiles rise in, tilt on hover, show "Play" over the art ---------- */
+  function buildWebGames() {
+    const tiles = [...document.querySelectorAll('.web-tile')];
+    if (!tiles.length || reduced) return;
+
+    gsap.set(tiles, { y: 80, opacity: 0, rotateX: -12, transformPerspective: 1000 });
+    ScrollTrigger.create({
+      trigger: '.web-grid',
+      start: 'top 85%',
+      once: true,
+      onEnter: () => gsap.to(tiles, { y: 0, opacity: 1, rotateX: 0, duration: 1.3, ease: 'expo.out', stagger: 0.12 }),
+    });
+
+    if (!finePointer) return;
+    tiles.forEach((tile) => {
+      const tilt = cardTilt(tile);
+      tile.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') tilt.enter(); });
+      tile.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        tilt.move(e.clientX, e.clientY);
+        if (e.target.closest('[data-cursor]')) pill.show('Play', 'web'); else pill.hide('web');
+      });
+      tile.addEventListener('pointerleave', () => { tilt.leave(); pill.hide('web'); });
     });
   }
 
@@ -416,7 +510,7 @@
      Scroll position drives the particle morph between sections
      ===================================================================== */
   function buildMorph() {
-    const sections = ['#about', '#projects', '#skills', '#experience', '#contact'].map((s) => document.querySelector(s));
+    const sections = ['#about', '#projects', '#web-games', '#skills', '#experience', '#contact'].map((s) => document.querySelector(s));
     const progress = sections.map(() => 0);
     const apply = () => setMorph(progress.reduce((a, b) => a + b, 0));
     sections.forEach((section, i) => {
@@ -556,20 +650,12 @@
     });
     hero.addEventListener('pointerleave', () => chars.forEach((ch) => { ch.y(0); ch.c(0); }));
 
-    // "Open" label follows the cursor over project images.
-    const pill = document.querySelector('.cursor-pill');
-    gsap.set(pill, { xPercent: -50, yPercent: -50, scale: 0.5 });
-    const px = gsap.quickTo(pill, 'x', { duration: 0.45, ease: 'power3' });
-    const py = gsap.quickTo(pill, 'y', { duration: 0.45, ease: 'power3' });
+    // The cursor label trails the pointer; sections decide when it shows (see `pill`).
+    const pillEl = document.querySelector('.cursor-pill');
+    gsap.set(pillEl, { xPercent: -50, yPercent: -50, scale: 0.5 });
+    const px = gsap.quickTo(pillEl, 'x', { duration: 0.45, ease: 'power3' });
+    const py = gsap.quickTo(pillEl, 'y', { duration: 0.45, ease: 'power3' });
     window.addEventListener('pointermove', (e) => { px(e.clientX); py(e.clientY); }, { passive: true });
-    document.querySelector('[data-rail-track]')?.addEventListener('pointerover', (e) => {
-      const media = e.target.closest('[data-cursor]');
-      gsap.to(pill, media
-        ? { opacity: 1, scale: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' }
-        : { opacity: 0, scale: 0.5, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
-    });
-    document.querySelector('[data-rail]')?.addEventListener('pointerleave', () =>
-      gsap.to(pill, { opacity: 0, scale: 0.5, duration: 0.25, ease: 'power2.out', overwrite: 'auto' }));
 
     // Buttons lean toward the cursor.
     document.querySelectorAll('[data-magnetic]').forEach((btn) => {

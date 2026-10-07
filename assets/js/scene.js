@@ -2,8 +2,8 @@
 // Classic script (not a module) so the page also runs when opened straight from disk;
 // three.js is pulled in with a dynamic import from the CDN.
 //
-// One THREE.Points cloud holds six target shapes as vertex attributes. The vertex shader blends
-// between them (uMorph 0..5) with a per-particle stagger and a noise "flight" between shapes.
+// One THREE.Points cloud holds seven target shapes as vertex attributes. The vertex shader blends
+// between them (uMorph 0..6) with a per-particle stagger and a noise "flight" between shapes.
 // Every shape is anchored to a DOM ".stage" element, so CSS decides where the 3D sits and it
 // scrolls with the layout like any other element. Behind it, a low-resolution domain-warped
 // smoke pass keeps the background alive, with a warm light that follows the active shape.
@@ -11,7 +11,7 @@
   'use strict';
 
   const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js';
-  const SHAPES = 6;
+  const SHAPES = 7;
 
   /* ---------- Deterministic random + 3D gradient noise ---------- */
   function mulberry32(seed) {
@@ -186,6 +186,57 @@
     return out;
   }
 
+  // Web games. A d20 die: glowing edges, bright corners and lightly dusted faces.
+  function d20(THREE, N, rnd) {
+    const geo = new THREE.IcosahedronGeometry(0.62, 0);
+    const pos = geo.attributes.position;
+    const verts = [];
+    const key = (v) => v.map((n) => n.toFixed(4)).join(',');
+    const index = new Map();
+    const faces = [];
+    for (let i = 0; i < pos.count; i += 3) {
+      const face = [];
+      for (let k = 0; k < 3; k++) {
+        const v = [pos.getX(i + k), pos.getY(i + k), pos.getZ(i + k)];
+        const id = key(v);
+        if (!index.has(id)) { index.set(id, verts.length); verts.push(v); }
+        face.push(index.get(id));
+      }
+      faces.push(face);
+    }
+    geo.dispose();
+    const edgeSet = new Set();
+    const edges = [];
+    faces.forEach(([a, b, c]) => [[a, b], [b, c], [c, a]].forEach(([p, q]) => {
+      const id = p < q ? `${p}-${q}` : `${q}-${p}`;
+      if (!edgeSet.has(id)) { edgeSet.add(id); edges.push([verts[p], verts[q]]); }
+    }));
+    const out = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const roll = rnd();
+      let x, y, z;
+      if (roll < 0.62) {
+        const [a, b] = edges[Math.floor(rnd() * edges.length)];
+        const t = rnd(), j = 0.006;
+        x = a[0] + (b[0] - a[0]) * t + gaussian(rnd) * j;
+        y = a[1] + (b[1] - a[1]) * t + gaussian(rnd) * j;
+        z = a[2] + (b[2] - a[2]) * t + gaussian(rnd) * j;
+      } else if (roll < 0.78) {
+        const v = verts[Math.floor(rnd() * verts.length)];
+        x = v[0] + gaussian(rnd) * 0.018; y = v[1] + gaussian(rnd) * 0.018; z = v[2] + gaussian(rnd) * 0.018;
+      } else {
+        const [a, b, c] = faces[Math.floor(rnd() * faces.length)].map((n) => verts[n]);
+        let u = rnd(), w = rnd();
+        if (u + w > 1) { u = 1 - u; w = 1 - w; }
+        x = a[0] + u * (b[0] - a[0]) + w * (c[0] - a[0]);
+        y = a[1] + u * (b[1] - a[1]) + w * (c[1] - a[1]);
+        z = a[2] + u * (b[2] - a[2]) + w * (c[2] - a[2]);
+      }
+      out[i * 3] = x; out[i * 3 + 1] = y; out[i * 3 + 2] = z;
+    }
+    return out;
+  }
+
   // 3. Voxel lattice: a 4x4x4 wireframe grid with a few highlighted voxels and bright nodes.
   function lattice(N, rnd) {
     const out = new Float32Array(N * 3);
@@ -311,6 +362,7 @@
   attribute vec3 aP3;
   attribute vec3 aP4;
   attribute vec3 aP5;
+  attribute vec3 aP6;
   attribute vec4 aRnd;
   varying float vAlpha;
   varying float vAccent;
@@ -326,13 +378,14 @@
     vec3 p3 = (uXf[3] * vec4(aP3, 1.0)).xyz;
     vec3 p4 = (uXf[4] * vec4(aP4, 1.0)).xyz;
     vec3 p5 = (uXf[5] * vec4(aP5, 1.0)).xyz;
+    vec3 p6 = (uXf[6] * vec4(aP6, 1.0)).xyz;
 
     float r = aRnd.x;
     float t1 = seg(uMorph, 0.0, r), t2 = seg(uMorph, 1.0, r), t3 = seg(uMorph, 2.0, r);
-    float t4 = seg(uMorph, 3.0, r), t5 = seg(uMorph, 4.0, r);
+    float t4 = seg(uMorph, 3.0, r), t5 = seg(uMorph, 4.0, r), t6 = seg(uMorph, 5.0, r);
     vec3 p = mix(p0, p1, t1);
-    p = mix(p, p2, t2); p = mix(p, p3, t3); p = mix(p, p4, t4); p = mix(p, p5, t5);
-    float travel = 4.0 * (t1*(1.0-t1) + t2*(1.0-t2) + t3*(1.0-t3) + t4*(1.0-t4) + t5*(1.0-t5));
+    p = mix(p, p2, t2); p = mix(p, p3, t3); p = mix(p, p4, t4); p = mix(p, p5, t5); p = mix(p, p6, t6);
+    float travel = 4.0 * (t1*(1.0-t1) + t2*(1.0-t2) + t3*(1.0-t3) + t4*(1.0-t4) + t5*(1.0-t5) + t6*(1.0-t6));
 
     // Load-in: particles converge from a wide scatter.
     float ti = clamp(uIntro * 1.7 - aRnd.w * 0.7, 0.0, 1.0);
@@ -512,7 +565,7 @@
     /* ----- Particles ----- */
     const rnd = mulberry32(2017);
     const shapes = [
-      planet(COUNT, rnd), controller(THREE, COUNT, rnd), island(COUNT, rnd),
+      planet(COUNT, rnd), controller(THREE, COUNT, rnd), island(COUNT, rnd), d20(THREE, COUNT, rnd),
       lattice(COUNT, rnd), helix(COUNT, rnd), gate(COUNT, rnd),
     ];
     const geometry = new THREE.BufferGeometry();
@@ -603,9 +656,10 @@
         case 0: rx(0.42); rz(-0.32); ry(t * 0.12); break;
         case 1: rx(-0.5 + Math.sin(t * 0.5) * 0.06); ry(Math.sin(t * 0.33) * 0.4); rz(Math.sin(t * 0.41) * 0.05); break;
         case 2: rx(0.62); ry(t * 0.05); break;
-        case 3: rx(0.5); ry(t * 0.2 + 0.4); break;
-        case 4: rz(0.22); ry(t * 0.45); break;
-        case 5: rx(-0.12); ry(0.18); rz(-t * 0.16); break;
+        case 3: rx(t * 0.23 + 0.3); ry(t * 0.31); rz(Math.sin(t * 0.4) * 0.3); break; // tumbling die
+        case 4: rx(0.5); ry(t * 0.2 + 0.4); break;
+        case 5: rz(0.22); ry(t * 0.45); break;
+        case 6: rx(-0.12); ry(0.18); rz(-t * 0.16); break;
       }
       return tmpR;
     }
