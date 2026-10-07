@@ -65,6 +65,7 @@
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
   // Area-weighted surface sampler over a list of { geo, matrix, weight } primitives.
+  // Writes position into out[0..2] and the triangle's normal into out[3..5].
   function surfaceSampler(THREE, parts) {
     const tris = [], cum = [];
     let total = 0;
@@ -92,183 +93,23 @@
         const p0 = pos[k + j];
         out[j] = p0 + u * (pos[k + 3 + j] - p0) + v * (pos[k + 6 + j] - p0);
       }
+      a.fromArray(pos, k); b.fromArray(pos, k + 3); c.fromArray(pos, k + 6);
+      e1.subVectors(b, a).cross(e2.subVectors(c, a)).normalize();
+      out[3] = e1.x; out[4] = e1.y; out[5] = e1.z;
       return out;
     };
   }
 
-  // 0. Hero: a gamer on a beanbag, controller in hand, playing a pixel platformer on a floating
-  // screen. Besides positions it returns a part id per particle, which the vertex shader animates
-  // (head bob, button mashing, the sprite's jump, the level scrolling, blinking coins).
-  const PART = { body: 0, head: 1, hands: 2, screenBg: 3, sprite: 4, coin: 5, world: 6, pad: 8, frame: 9 };
-  // The screen sits ahead and to the gamer's right so neither hides the other.
-  const HERO_CENTER = [0.28, 0, -0.45];
-  const HERO_SCALE = 1.7;
-  const SCREEN = { cx: 0.55, cy: 0.45, z: -1.35, w: 1.5, h: 0.9, cols: 32, speed: 0.22 };
-  // The level, top row first: # ground/platforms, o coins, . clouds. It wraps horizontally.
-  const SCREEN_MAP = [
-    '                                ',
-    '    ..                ...       ',
-    '   ....              .....      ',
-    '                                ',
-    '                                ',
-    '                  o o           ',
-    '                                ',
-    '                 ######         ',
-    '                                ',
-    '    o                       o   ',
-    '                                ',
-    '   #####                  ####  ',
-    '                                ',
-    '            o                   ',
-    '                                ',
-    '                                ',
-    '######## ############ ##########',
-    '######## ############ ##########',
-  ];
-  const SPRITE = [' ### ', ' ### ', '#####', ' ### ', ' # # '];
-  const SPRITE_COL = 16; // the screen's left edge sits behind the gamer's shoulder
-  const SCREEN_PX = SCREEN.w / SCREEN.cols;
-
-  function gamer(THREE, N, rnd) {
-    const pos = new Float32Array(N * 3), part = new Float32Array(N);
-    let i = 0;
-    const put = (x, y, z, id) => {
-      if (i >= N) return;
-      pos[i * 3] = (x - HERO_CENTER[0]) / HERO_SCALE;
-      pos[i * 3 + 1] = (y - HERO_CENTER[1]) / HERO_SCALE;
-      pos[i * 3 + 2] = (z - HERO_CENTER[2]) / HERO_SCALE;
-      part[i] = id; i++;
-    };
-    const V = (x, y, z) => new THREE.Vector3(x, y, z);
-    const Y = V(0, 1, 0);
-    const at = (geo, x, y, z, rot = [0, 0, 0], s = [1, 1, 1]) => ({
-      geo, matrix: new THREE.Matrix4().compose(V(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)), V(...s)),
-    });
-    // A capsule running from joint a to joint b (sx/sz flatten it, e.g. for the torso).
-    const limb = (a, b, r, sx = 1, sz = 1) => {
-      const A = V(...a), B = V(...b);
-      const dir = B.clone().sub(A);
-      const len = dir.length();
-      return {
-        geo: new THREE.CapsuleGeometry(r, Math.max(0.001, len), 6, 14),
-        matrix: new THREE.Matrix4().compose(A.clone().add(B).multiplyScalar(0.5),
-          new THREE.Quaternion().setFromUnitVectors(Y, dir.normalize()), V(sx, 1, sz)),
-      };
-    };
-    const tmp = [0, 0, 0];
-    const n = (f) => Math.floor(N * f);
-    const fill = (parts, count, id) => {
-      const sample = surfaceSampler(THREE, parts);
-      for (let k = 0; k < count; k++) { sample(rnd, tmp); put(tmp[0], tmp[1], tmp[2], id); }
-    };
-    const sides = (fn) => [-1, 1].flatMap(fn);
-
-    // Torso, upper arms and legs (the character faces -z, toward the screen).
-    fill([
-      limb([0, -0.22, 0.1], [0, 0.3, 0.0], 0.2, 1.1, 0.8),
-      limb([0, 0.3, 0.0], [0, 0.42, -0.02], 0.07),
-      ...sides((s) => [
-        limb([0.24 * s, 0.24, 0.04], [0.29 * s, -0.02, -0.17], 0.065),
-        limb([0.13 * s, -0.32, 0.05], [0.18 * s, -0.2, -0.42], 0.105),
-        limb([0.18 * s, -0.2, -0.42], [0.19 * s, -0.62, -0.5], 0.085),
-        at(new THREE.BoxGeometry(0.12, 0.07, 0.22), 0.19 * s, -0.66, -0.58),
-      ]),
-    ], n(0.27), PART.body);
-    // Beanbag.
-    fill([at(new THREE.SphereGeometry(1, 28, 18), 0, -0.62, 0.05, [0, 0, 0], [0.6, 0.3, 0.56])], n(0.065), PART.body);
-    // Head, backwards cap and headset with mic.
-    fill([
-      at(new THREE.SphereGeometry(0.23, 24, 16), 0, 0.6, -0.04),
-      at(new THREE.SphereGeometry(0.25, 24, 10, 0, Math.PI * 2, 0, Math.PI / 2), 0, 0.63, -0.04),
-      at(new THREE.BoxGeometry(0.26, 0.02, 0.18), 0, 0.65, 0.2, [-0.15, 0, 0]),
-      at(new THREE.TorusGeometry(0.27, 0.025, 6, 32, Math.PI), 0, 0.6, -0.04),
-      ...sides((s) => [at(new THREE.CylinderGeometry(0.095, 0.095, 0.07, 20), 0.26 * s, 0.58, -0.04, [0, 0, Math.PI / 2])]),
-      limb([-0.26, 0.55, -0.08], [-0.08, 0.5, -0.25], 0.012),
-    ], n(0.15), PART.head);
-    // Forearms and hands.
-    fill(sides((s) => [
-      limb([0.29 * s, -0.02, -0.17], [0.13 * s, 0.08, -0.42], 0.058),
-      at(new THREE.SphereGeometry(0.068, 14, 10), 0.12 * s, 0.09, -0.45),
-    ]), n(0.06), PART.hands);
-    // The controller in their hands.
-    fill([
-      limb([-0.11, 0.11, -0.49], [0.11, 0.11, -0.49], 0.055),
-      ...sides((s) => [
-        limb([0.1 * s, 0.11, -0.49], [0.14 * s, 0.04, -0.44], 0.045),
-        at(new THREE.SphereGeometry(0.024, 10, 8), 0.05 * s, 0.165, -0.5),
-      ]),
-    ], n(0.06), PART.pad);
-
-    // Screen: frame, stand and base.
-    const { cx, cy, z, w, h, cols } = SCREEN;
-    const fw = w + 0.06, fh = h + 0.06;
-    for (let k = 0, count = n(0.08); k < count; k++) {
-      const r = rnd();
-      if (r < 0.72) {
-        let d = rnd() * 2 * (fw + fh), x, y;
-        if (d < fw) { x = -fw / 2 + d; y = fh / 2; }
-        else if ((d -= fw) < fh) { x = fw / 2; y = fh / 2 - d; }
-        else if ((d -= fh) < fw) { x = fw / 2 - d; y = -fh / 2; }
-        else { d -= fw; x = -fw / 2; y = -fh / 2 + d; }
-        put(cx + x + gaussian(rnd) * 0.004, cy + y + gaussian(rnd) * 0.004, z + gaussian(rnd) * 0.006, PART.frame);
-      } else if (r < 0.84) {
-        const top = cy - fh / 2, bottom = -0.7;
-        put(cx + gaussian(rnd) * 0.012, bottom + rnd() * (top - bottom), z + gaussian(rnd) * 0.012, PART.frame);
-      } else {
-        const a = rnd() * Math.PI * 2;
-        put(cx + Math.cos(a) * 0.3, -0.7, z + Math.sin(a) * 0.12, PART.frame);
-      }
-    }
-    // Screen glow behind the pixels.
-    for (let k = 0, count = n(0.05); k < count; k++) {
-      put(cx + (rnd() - 0.5) * w, cy + (rnd() - 0.5) * h, z - 0.01, PART.screenBg);
-    }
-    // Pixel art: the scrolling level, the coins and the jumping hero sprite.
-    const rows = SCREEN_MAP.length;
-    const pixelCenter = (c, r) => [cx + (c - (cols - 1) / 2) * SCREEN_PX, cy + (r - (rows - 1) / 2) * SCREEN_PX];
-    const cells = { '#': [], o: [], '.': [] };
-    SCREEN_MAP.forEach((line, k) => [...line].forEach((ch, c) => { if (cells[ch]) cells[ch].push([c, rows - 1 - k]); }));
-    const spriteCells = [];
-    SPRITE.forEach((line, k) => [...line].forEach((ch, c) => { if (ch === '#') spriteCells.push([SPRITE_COL + c, 6 - k]); }));
-    const pixels = (list, count, id) => {
-      for (let k = 0; k < count; k++) {
-        const [c, r] = list[Math.floor(rnd() * list.length)];
-        const [x, y] = pixelCenter(c, r);
-        put(x + (rnd() - 0.5) * SCREEN_PX * 0.62, y + (rnd() - 0.5) * SCREEN_PX * 0.62, z + 0.01 + gaussian(rnd) * 0.003, id);
-      }
-    };
-    pixels(cells['#'], n(0.155), PART.world);
-    pixels(cells['.'], n(0.015), PART.world);
-    pixels(cells.o, n(0.02), PART.coin);
-    pixels(spriteCells, n(0.05), PART.sprite);
-
-    // Rounding leftovers: duplicate random earlier particles.
-    const used = i;
-    while (i < N) {
-      const j = Math.floor(rnd() * used);
-      pos[i * 3] = pos[j * 3]; pos[i * 3 + 1] = pos[j * 3 + 1]; pos[i * 3 + 2] = pos[j * 3 + 2];
-      part[i] = part[j]; i++;
-    }
-    return { pos, part };
-  }
-
-  // Screen constants in the hero's normalized space, injected into the vertex shader.
-  const f5 = (v) => v.toFixed(5);
-  const HERO_GLSL = `
-  const float SCR_X0 = ${f5((SCREEN.cx - SCREEN.w / 2 - HERO_CENTER[0]) / HERO_SCALE)};
-  const float SCR_W = ${f5(SCREEN.w / HERO_SCALE)};
-  const float SCR_PX = ${f5(SCREEN_PX / HERO_SCALE)};
-  const float SCR_SPEED = ${f5(SCREEN.speed / HERO_SCALE)};`;
-
-  // 1. Game controller: sampled from the surface of a few primitives, area weighted.
-  function controller(THREE, N, rnd) {
+  // Gamepad primitives: about 2.4 wide, face pointing +z, bumpers toward +y.
+  function padParts(THREE, transform) {
     const parts = [];
-    const add = (geo, matrix, weight = 1) => parts.push({ geo, matrix, weight });
     const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
     const S = (x, y, z) => new THREE.Matrix4().makeScale(x, y, z);
     const RZ = (a) => new THREE.Matrix4().makeRotationZ(a);
     const RX = (a) => new THREE.Matrix4().makeRotationX(a);
-
+    const add = (geo, matrix, weight = 1) => parts.push({
+      geo, weight, matrix: transform ? transform.clone().multiply(matrix) : matrix,
+    });
     add(new THREE.CapsuleGeometry(0.55, 1.3, 8, 28), S(1, 0.95, 0.42).multiply(RZ(Math.PI / 2)), 1);
     for (const s of [-1, 1]) {
       add(new THREE.CapsuleGeometry(0.36, 0.75, 8, 20), T(0.8 * s, -0.55, -0.02).multiply(RZ(0.5 * s)).multiply(S(1, 1, 0.48)), 1);
@@ -285,37 +126,204 @@
       add(new THREE.SphereGeometry(0.072, 14, 10), T(0.74 + dx, 0.12 + dy, 0.25), 5);
     }
     for (const s of [-1, 1]) add(new THREE.SphereGeometry(0.035, 10, 8), T(0.16 * s, 0.2, 0.24), 6);
+    return parts;
+  }
 
-    // Cumulative-area table over every triangle.
-    const tris = []; const cum = []; let total = 0;
-    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
-    const e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
-    for (const part of parts) {
-      const g = part.geo.index ? part.geo.toNonIndexed() : part.geo;
-      g.applyMatrix4(part.matrix);
-      const pos = g.attributes.position.array;
-      for (let k = 0; k < pos.length; k += 9) {
-        a.fromArray(pos, k); b.fromArray(pos, k + 3); c.fromArray(pos, k + 6);
-        const area = e1.subVectors(b, a).cross(e2.subVectors(c, a)).length() * 0.5 * part.weight;
-        if (area <= 0) continue;
-        total += area; cum.push(total); tris.push(pos, k);
-      }
-      part.geo.dispose();
-    }
-    const out = new Float32Array(N * 3);
+  // 1. Game controller (About section).
+  function controller(THREE, N, rnd) {
+    const sample = surfaceSampler(THREE, padParts(THREE));
+    const out = new Float32Array(N * 3), tmp = [0, 0, 0, 0, 0, 0];
     for (let i = 0; i < N; i++) {
-      const target = rnd() * total;
-      let lo = 0, hi = cum.length - 1;
-      while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < target) lo = mid + 1; else hi = mid; }
-      const pos = tris[lo * 2], k = tris[lo * 2 + 1];
-      let u = rnd(), v = rnd();
-      if (u + v > 1) { u = 1 - u; v = 1 - v; }
-      for (let j = 0; j < 3; j++) {
-        const p0 = pos[k + j];
-        out[i * 3 + j] = (p0 + u * (pos[k + 3 + j] - p0) + v * (pos[k + 6 + j] - p0)) / 1.3;
-      }
+      sample(rnd, tmp);
+      out[i * 3] = tmp[0] / 1.3; out[i * 3 + 1] = tmp[1] / 1.3; out[i * 3 + 2] = tmp[2] / 1.3;
     }
     return out;
+  }
+
+  /* ---------- Signed-distance sculpting for the hero bust ---------- */
+  function sdEllipsoid(x, y, z, rx, ry, rz) {
+    const px = x / rx, py = y / ry, pz = z / rz;
+    const k0 = Math.hypot(px, py, pz);
+    const k1 = Math.hypot(px / rx, py / ry, pz / rz);
+    return k1 > 0 ? (k0 * (k0 - 1)) / k1 : -Math.min(rx, ry, rz);
+  }
+  function sdCapsule(x, y, z, a, b, r) {
+    const pax = x - a[0], pay = y - a[1], paz = z - a[2];
+    const bax = b[0] - a[0], bay = b[1] - a[1], baz = b[2] - a[2];
+    const h = Math.min(1, Math.max(0, (pax * bax + pay * bay + paz * baz) / (bax * bax + bay * bay + baz * baz)));
+    return Math.hypot(pax - bax * h, pay - bay * h, paz - baz * h) - r;
+  }
+  function smin(a, b, k) {
+    const h = Math.max(k - Math.abs(a - b), 0) / k;
+    return Math.min(a, b) - h * h * k * 0.25;
+  }
+
+  // 0. Hero: a gamer from the waist up, in profile facing left (-x), hunched toward a screen that
+  // sits off-frame to the left. Face and body are one smooth signed-distance sculpt; headset and
+  // controller are hard-surface meshes. Each particle stores baked lighting: a cool key light from
+  // the off-screen game on the left and an orange rim light from behind.
+  // Part ids drive shader animation: 0 body, 1 head + headset, 2 hands, 7 LEDs, 8 controller.
+  const HEAD = { x: -0.13, y: 0.46, tilt: 0.2 };
+  const TORSO = { x: 0.05, y: -0.22, lean: 0.2 };
+  const PAD = { x: -0.36, y: -0.07, scale: 0.13 };
+
+  function gamerBust(THREE, N, rnd) {
+    const hc = Math.cos(HEAD.tilt), hs = Math.sin(HEAD.tilt);
+    const tc = Math.cos(TORSO.lean), ts = Math.sin(TORSO.lean);
+
+    // Head in its own (untilted) frame, face toward -x.
+    const headSdf = (x, y, z) => {
+      let d = sdEllipsoid(x - 0.02, y - 0.02, z, 0.2, 0.21, 0.165);                     // cranium
+      d = smin(d, sdEllipsoid(x + 0.07, y + 0.09, z, 0.12, 0.1, 0.125), 0.06);            // jaw
+      d = smin(d, sdCapsule(x, y, z, [-0.165, 0.06, -0.07], [-0.165, 0.06, 0.07], 0.03), 0.04); // brow
+      d = smin(d, sdCapsule(x, y, z, [-0.19, 0.0, 0], [-0.228, -0.045, 0], 0.022), 0.03); // nose
+      d = smin(d, sdCapsule(x, y, z, [-0.18, -0.085, -0.035], [-0.18, -0.085, 0.035], 0.018), 0.02); // lips
+      d = smin(d, Math.hypot(x + 0.16, y + 0.15, z) - 0.045, 0.04);                       // chin
+      // Hoodie hood pulled up: a shell around the head, open over the face, flowing into the neck.
+      let hood = Math.max(sdEllipsoid(x - 0.04, y - 0.03, z, 0.265, 0.275, 0.22),
+        -sdEllipsoid(x - 0.03, y - 0.02, z, 0.235, 0.245, 0.19));
+      hood = Math.max(hood, -(x + 0.1 + 0.35 * y)); // face opening, deeper at the brow
+      hood = Math.max(hood, -(y + 0.22));           // open at the bottom, where it meets the neck
+      return Math.min(d, hood);
+    };
+    const arm = (s) => [
+      [[-0.02, 0.06, 0.27 * s], [0.02, -0.25, 0.29 * s], 0.085],     // upper arm (hoodie sleeve)
+      [[0.02, -0.25, 0.29 * s], [-0.28, -0.12, 0.16 * s], 0.07],     // forearm
+      [[-0.31, -0.06, 0.11 * s], [-0.36, -0.02, 0.07 * s], 0.022],   // thumb on the stick
+    ];
+    const limbs = [...arm(1), ...arm(-1),
+      [[-0.02, 0.1, -0.25], [-0.02, 0.1, 0.25], 0.1],               // shoulder line
+      [[-0.04, 0.12, 0], [-0.1, 0.3, 0], 0.075],                    // neck
+    ];
+    const sdf = (x, y, z) => {
+      // Torso, leaning forward around its centre.
+      const lx = x - TORSO.x, ly = y - TORSO.y;
+      let d = sdEllipsoid(tc * lx - ts * ly, ts * lx + tc * ly, z, 0.18, 0.42, 0.27);
+      d = smin(d, sdEllipsoid(x - 0.12, y - 0.16, z, 0.12, 0.13, 0.2), 0.08);            // hood bunched at the back
+      for (const [a, b, r] of limbs) d = smin(d, sdCapsule(x, y, z, a, b, r), 0.05);
+      for (const s of [-1, 1]) d = smin(d, Math.hypot(x + 0.31, y + 0.1, z - 0.13 * s) - 0.058, 0.04); // hands
+      // Head: nodded forward around its centre.
+      const hx = x - HEAD.x, hy = y - HEAD.y;
+      return smin(d, headSdf(hc * hx + hs * hy, -hs * hx + hc * hy, z), 0.05);
+    };
+
+    const pts = []; // [x, y, z, nx, ny, nz, part]
+    const e = 0.0015;
+    const grad = (x, y, z) => {
+      const gx = sdf(x + e, y, z) - sdf(x - e, y, z);
+      const gy = sdf(x, y + e, z) - sdf(x, y - e, z);
+      const gz = sdf(x, y, z + e) - sdf(x, y, z - e);
+      const l = Math.hypot(gx, gy, gz) || 1;
+      return [gx / l, gy / l, gz / l];
+    };
+    // Scatter points through a box and pull each onto the surface (Newton steps). Separate budgets
+    // for the head and hands keep the details dense; the plain torso gets fewer points.
+    const partOf = (x, y, z) => (Math.hypot(x - HEAD.x, y - HEAD.y, z) < 0.34 && y > 0.22 ? 1 : (x < -0.2 && y < 0.02 ? 2 : 0));
+    const sculpt = (count, [x0, x1], [y0, y1], [z0, z1], only) => {
+      const start = pts.length;
+      let guard = 0;
+      while (pts.length - start < count && guard++ < count * 12) {
+        let x = x0 + rnd() * (x1 - x0), y = y0 + rnd() * (y1 - y0), z = z0 + rnd() * (z1 - z0);
+        let ok = false;
+        for (let it = 0; it < 8; it++) {
+          const d = sdf(x, y, z);
+          if (Math.abs(d) < 0.0025) { ok = true; break; }
+          const [gx, gy, gz] = grad(x, y, z);
+          x -= d * gx; y -= d * gy; z -= d * gz;
+        }
+        if (!ok || y < -0.52) continue;
+        const part = partOf(x, y, z);
+        if (only !== undefined && part !== only) continue;
+        const [nx, ny, nz] = grad(x, y, z);
+        pts.push([x, y, z, nx, ny, nz, part]);
+      }
+    };
+    sculpt(Math.floor(N * 0.22), [-0.45, 0.2], [0.18, 0.76], [-0.26, 0.26], 1); // face and head
+    sculpt(Math.floor(N * 0.08), [-0.46, -0.1], [-0.3, 0.06], [-0.32, 0.32], 2); // hands
+    sculpt(Math.floor(N * 0.36), [-0.55, 0.4], [-0.52, 0.76], [-0.42, 0.42]);    // everything
+
+    // Hard-surface meshes: headset (in the head frame) and the controller in the hands.
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    const headMatrix = new THREE.Matrix4().makeTranslation(HEAD.x, HEAD.y, 0)
+      .multiply(new THREE.Matrix4().makeRotationZ(HEAD.tilt));
+    const inHead = (geo, x, y, z, rot = [0, 0, 0]) => ({
+      geo,
+      matrix: headMatrix.clone().multiply(new THREE.Matrix4().compose(V(x, y, z),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)), V(1, 1, 1))),
+    });
+    // A capsule between two points given in the head frame.
+    const headLimb = (a, b, r) => {
+      const A = V(...a), B = V(...b), dir = B.clone().sub(A);
+      return {
+        geo: new THREE.CapsuleGeometry(r, dir.length(), 6, 12),
+        matrix: headMatrix.clone().multiply(new THREE.Matrix4().compose(A.clone().add(B).multiplyScalar(0.5),
+          new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir.normalize()), V(1, 1, 1))),
+      };
+    };
+    // Headset worn over the hood. Only the near ear cup (+z, camera side) is built: particles are
+    // additive, so a far cup would show through the head and read as goggles.
+    const headset = [
+      inHead(new THREE.CylinderGeometry(0.11, 0.11, 0.075, 30), 0.01, 0, 0.255, [Math.PI / 2, 0, 0]),
+      inHead(new THREE.TorusGeometry(0.095, 0.026, 8, 30), 0.01, 0, 0.222),
+      inHead(new THREE.TorusGeometry(0.3, 0.032, 8, 48, Math.PI), 0.02, 0.0, 0, [0, Math.PI / 2, 0]),
+      headLimb([-0.03, -0.06, 0.27], [-0.19, -0.11, 0.08], 0.012), // mic boom
+    ];
+    const leds = [
+      inHead(new THREE.TorusGeometry(0.075, 0.017, 8, 44), 0.01, 0, 0.296),
+      inHead(new THREE.SphereGeometry(0.026, 12, 8), -0.2, -0.11, 0.075), // mic tip
+    ];
+    // Controller: width along z, face tilted up toward the player's eyes, grips toward the hands.
+    const padBasis = new THREE.Matrix4().makeBasis(V(0, 0, -1), V(-1, 0, 0), V(0, 1, 0));
+    const padMatrix = new THREE.Matrix4().makeTranslation(PAD.x, PAD.y, 0)
+      .multiply(new THREE.Matrix4().makeRotationZ(-0.5))
+      .multiply(padBasis)
+      .multiply(new THREE.Matrix4().makeScale(PAD.scale, PAD.scale, PAD.scale));
+
+    const tmp = [0, 0, 0, 0, 0, 0];
+    const meshFill = (parts, count, part) => {
+      const sample = surfaceSampler(THREE, parts);
+      for (let k = 0; k < count; k++) { sample(rnd, tmp); pts.push([...tmp, part]); }
+    };
+    meshFill(headset, Math.floor(N * 0.12), 1);
+    // Hoodie drawstrings hanging down the chest.
+    meshFill([-1, 1].map((s) => {
+      const A = V(-0.17, 0.23, 0.045 * s), B = V(-0.25, -0.01, 0.055 * s), dir = B.clone().sub(A);
+      return {
+        geo: new THREE.CapsuleGeometry(0.009, dir.length(), 4, 8),
+        matrix: new THREE.Matrix4().compose(A.clone().add(B).multiplyScalar(0.5),
+          new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir.normalize()), V(1, 1, 1)),
+      };
+    }), Math.floor(N * 0.012), 0);
+    meshFill(leds, Math.floor(N * 0.04), 7);
+    meshFill(padParts(THREE, padMatrix), N - pts.length, 8);
+
+    // Bake lighting, then centre and scale everything into a unit sphere.
+    const key = [-1, 0.15, 0.55], rim = [0.85, 0.45, -0.25];
+    const norm = (v) => { const l = Math.hypot(...v); return v.map((c) => c / l); };
+    const [kx, ky, kz] = norm(key), [rx, ry, rz] = norm(rim);
+    let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    for (const p of pts) {
+      minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+      minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
+      minZ = Math.min(minZ, p[2]); maxZ = Math.max(maxZ, p[2]);
+    }
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2, cz = (minZ + maxZ) / 2;
+    let radius = 0;
+    for (const p of pts) radius = Math.max(radius, Math.hypot(p[0] - cx, p[1] - cy, p[2] - cz));
+
+    const pos = new Float32Array(N * 3), normal = new Float32Array(N * 3);
+    const part = new Float32Array(N), light = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const p = pts[i % pts.length];
+      pos[i * 3] = (p[0] - cx) / radius; pos[i * 3 + 1] = (p[1] - cy) / radius; pos[i * 3 + 2] = (p[2] - cz) / radius;
+      normal[i * 3] = p[3]; normal[i * 3 + 1] = p[4]; normal[i * 3 + 2] = p[5];
+      part[i] = p[6];
+      const fade = smooth(-0.5, -0.1, p[1]); // chest-up portrait: the body dissolves below the chest
+      light[i * 3] = fade * (0.07 + 0.93 * Math.max(0, p[3] * kx + p[4] * ky + p[5] * kz));
+      light[i * 3 + 1] = fade * Math.pow(Math.max(0, p[3] * rx + p[4] * ry + p[5] * rz), 1.5);
+      light[i * 3 + 2] = fade;
+    }
+    return { pos, normal, part, light };
   }
 
   // 2. Level island: topographic contour lines rising out of a dotted editor grid.
@@ -525,10 +533,11 @@
   attribute vec3 aP6;
   attribute vec4 aRnd;
   attribute float aPart;
+  attribute vec3 aLight;
+  attribute vec3 aNormal;
   varying float vAlpha;
   varying float vAccent;
   ${NOISE_GLSL}
-  ${HERO_GLSL}
   float seg(float m, float i, float r){
     float x = clamp((m - i) * 1.8 - r * 0.8, 0.0, 1.0);
     return x * x * (3.0 - 2.0 * x);
@@ -537,17 +546,16 @@
     // Hero gamer: animate its parts in local space before placing it.
     vec3 hp = position;
     float part = aPart;
-    if (part > 0.5 && part < 1.5) {                                   // head nods along
-      hp.y += 0.008 * sin(uTime * 2.2);
-      hp.x += 0.005 * sin(uTime * 1.1);
-    } else if ((part > 1.5 && part < 2.5) || (part > 7.5 && part < 8.5)) {   // hands + pad: button mashing
-      hp.xy += vec2(sin(uTime * 14.0 + aRnd.y * 6.28), sin(uTime * 11.0 + aRnd.z * 6.28)) * 0.0025;
-      hp.x += 0.008 * sin(uTime * 1.6);
+    bool isHead = (part > 0.5 && part < 1.5) || (part > 6.5 && part < 7.5);
+    bool isHands = (part > 1.5 && part < 2.5) || part > 7.5;
+    hp.y += 0.004 * sin(uTime * 1.5);                                  // breathing
+    if (isHead) {                                                      // nodding along to the game
+      hp.y += 0.007 * sin(uTime * 2.2);
+      hp.x -= 0.006 * max(0.0, sin(uTime * 1.1));
+    } else if (isHands) {                                              // button mashing + steering
+      hp.xy += vec2(sin(uTime * 14.0 + aRnd.y * 6.28), sin(uTime * 11.0 + aRnd.z * 6.28)) * 0.002;
+      hp.z += 0.01 * sin(uTime * 1.6);
       hp.y += 0.004 * abs(sin(uTime * 3.1));
-    } else if (part > 3.5 && part < 4.5) {                            // sprite jumps, snapped to pixels
-      hp.y += SCR_PX * floor(5.0 * max(0.0, sin(uTime * 2.4)));
-    } else if (part > 4.5 && part < 6.5) {                            // the level scrolls left, wrapping
-      hp.x = mod(hp.x - SCR_X0 - uTime * SCR_SPEED, SCR_W) + SCR_X0;
     }
     vec3 p0 = (uXf[0] * vec4(hp, 1.0)).xyz;
     vec3 p1 = (uXf[1] * vec4(aP1, 1.0)).xyz;
@@ -583,20 +591,27 @@
     gl_Position = projectionMatrix * mv;
 
     float big = step(0.993, aRnd.y);
-    float s = (0.5 + aRnd.z * aRnd.z * 1.15) * (1.0 + big * 2.4);
+    // The hero uses smaller, uniform particles (no big sparkles) so its details stay crisp.
+    float s = (0.5 + aRnd.z * aRnd.z * 1.15) * (1.0 + big * 2.4 * t1) * mix(0.9, 1.0, t1);
     gl_PointSize = uSize * s * uPR / -mv.z;
 
     float tw = 0.72 + 0.28 * sin(uTime * 1.6 + aRnd.w * 50.0);
     vAlpha = (0.3 + 0.7 * aRnd.w) * tw * mix(1.0, 0.4, big) * (0.45 + 0.55 * ti) + push * 0.35;
 
-    // Hero colours: controller, sprite and coins glow orange; screen pixels read brighter.
-    // Both fade back to the shared look as the particles leave the hero shape (t1).
+    // Hero lighting is baked per particle (aLight: x = cool key light from the game on the left,
+    // y = orange rim light from behind). LEDs and the controller glow orange. Everything fades back
+    // to the shared look as the particles leave the hero shape (t1).
     float rndAccent = step(0.86, fract(aRnd.y * 7.31));
-    bool lit = (part > 3.5 && part < 5.5) || (part > 7.5 && part < 8.5);
-    float heroAccent = lit ? 1.0 : rndAccent * 0.6;
-    // Thin figures need more light than solid shapes to read: body 1.6x, screen pixels 2.2x.
-    float heroAlpha = (part > 3.5 && part < 6.5) ? 2.2 : ((part > 2.5 && part < 3.5) ? 0.6 : 1.6);
-    if (part > 4.5 && part < 5.5) heroAlpha *= 0.4 + 0.6 * step(0.35, fract(uTime * 1.2 + aRnd.y));
+    bool glows = part > 6.5;
+    // Outline glow: surfaces turning away from the camera light up, so the silhouette reads.
+    // Surfaces facing away from the camera are dimmed, so the hero reads as a solid form.
+    vec3 nW = normalize(mat3(uXf[0]) * aNormal);
+    float facing = dot(nW, normalize(cameraPosition - p0));
+    float fres = pow(1.0 - abs(facing), 2.0) * aLight.z;
+    float heroAccent = glows ? 1.0 : clamp(aLight.y * 1.6, 0.0, 1.0);
+    float heroAlpha = glows ? 2.6 : (0.03 + 3.0 * pow(aLight.x, 1.3) + 1.7 * aLight.y + 2.1 * fres);
+    heroAlpha *= smoothstep(-0.2, 0.25, facing);
+    if (part > 6.5 && part < 7.5) heroAlpha *= 0.7 + 0.3 * sin(uTime * 3.0);   // LED pulse
     vAccent = mix(heroAccent, rndAccent, t1);
     vAlpha *= mix(heroAlpha, 1.0, t1);
   }`;
@@ -682,8 +697,8 @@
     // Warm light behind the active shape.
     vec2 dg = (uv - uGlow) * vec2(aspect, 1.0);
     float g = exp(-dot(dg, dg) / (uGlowR * uGlowR));
-    col += vec3(1.0, 0.42, 0.24) * g * (0.035 + 0.12 * smoke) * uIntro;
-    col += vec3(1.0, 0.55, 0.35) * g * g * 0.025 * uIntro;
+    col += vec3(1.0, 0.42, 0.24) * g * (0.02 + 0.075 * smoke) * uIntro;
+    col += vec3(1.0, 0.55, 0.35) * g * g * 0.015 * uIntro;
 
     // Cool light that follows the pointer.
     vec2 dm = (uv - uMouse) * vec2(aspect, 1.0);
@@ -714,7 +729,7 @@
     if (!renderer.getContext()) return null;
 
     const small = window.matchMedia('(max-width: 860px)').matches;
-    const COUNT = small ? 9000 : 18000;
+    const COUNT = small ? 12000 : 32000;
     const pr = Math.min(window.devicePixelRatio || 1, small ? 2 : 1.75);
     renderer.setPixelRatio(pr);
     renderer.setClearColor(0x0a0a0b, 1);
@@ -751,7 +766,7 @@
 
     /* ----- Particles ----- */
     const rnd = mulberry32(2017);
-    const hero = gamer(THREE, COUNT, rnd);
+    const hero = gamerBust(THREE, COUNT, rnd);
     const shapes = [
       hero.pos, controller(THREE, COUNT, rnd), island(COUNT, rnd), d20(THREE, COUNT, rnd),
       lattice(COUNT, rnd), helix(COUNT, rnd), gate(COUNT, rnd),
@@ -759,6 +774,8 @@
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(shapes[0], 3));
     geometry.setAttribute('aPart', new THREE.BufferAttribute(hero.part, 1));
+    geometry.setAttribute('aLight', new THREE.BufferAttribute(hero.light, 3));
+    geometry.setAttribute('aNormal', new THREE.BufferAttribute(hero.normal, 3));
     for (let i = 1; i < SHAPES; i++) geometry.setAttribute(`aP${i}`, new THREE.BufferAttribute(shapes[i], 3));
     const rands = new Float32Array(COUNT * 4);
     for (let i = 0; i < rands.length; i++) rands[i] = rnd();
@@ -769,7 +786,7 @@
       uTime: { value: 0 },
       uMorph: { value: 0 },
       uIntro: { value: reduced ? 1 : 0 },
-      uSize: { value: small ? 19 : 23 },
+      uSize: { value: 0 }, // set in resize(), scaled with the viewport height
       uPR: { value: pr },
       uChaos: { value: reduced ? 0 : 1 },
       uXf: { value: xf },
@@ -810,6 +827,8 @@
     function resize() {
       W = window.innerWidth; H = window.innerHeight;
       renderer.setSize(W, H, false);
+      // Bigger screens show the shapes bigger; grow the particles too so density stays even.
+      uniforms.uSize.value = (small ? 19 : 23) * Math.min(1.5, Math.max(0.85, H / 800));
       camera.aspect = W / H;
       camera.updateProjectionMatrix();
       bgTarget.setSize(Math.ceil(W / 3), Math.ceil(H / 3));
@@ -842,7 +861,7 @@
       const rz = (a) => tmpR.multiply(tmpA.makeRotationZ(a));
       rx(py * 0.18); ry(px * 0.28);
       switch (i) {
-        case 0: rx(-0.2); ry(-0.3 + Math.sin(t * 0.3) * 0.08); break; // over-the-shoulder: gamer left, screen right
+        case 0: rx(0.04); ry(0.42 + Math.sin(t * 0.25) * 0.06); break; // 3/4 profile, facing left
         case 1: rx(-0.5 + Math.sin(t * 0.5) * 0.06); ry(Math.sin(t * 0.33) * 0.4); rz(Math.sin(t * 0.41) * 0.05); break;
         case 2: rx(0.62); ry(t * 0.05); break;
         case 3: rx(t * 0.23 + 0.3); ry(t * 0.31); rz(Math.sin(t * 0.4) * 0.3); break; // tumbling die
