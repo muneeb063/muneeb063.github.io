@@ -275,7 +275,7 @@ main { position: relative; z-index: 2; }
 /* ---------- Hero ---------- */
 .hero { position: relative; min-height: 100dvh; display: flex; }
 .stage-hero {
-  position: absolute; top: 50%; right: -4vw;
+  position: absolute; top: 50%; right: -8vw;
   width: min(64vw, 112vh); aspect-ratio: 1;
   transform: translateY(-50%);
 }
