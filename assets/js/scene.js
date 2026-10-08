@@ -157,12 +157,14 @@
     const h = Math.max(k - Math.abs(a - b), 0) / k;
     return Math.min(a, b) - h * h * k * 0.25;
   }
+  const smax = (a, b, k) => -smin(-a, -b, k);
 
   // 0. Hero: a gamer from the waist up, in profile facing left (-x), hunched toward a screen that
   // sits off-frame to the left. Face and body are one smooth signed-distance sculpt; headset and
   // controller are hard-surface meshes. Each particle stores baked lighting: a cool key light from
   // the off-screen game on the left and an orange rim light from behind.
-  // Part ids drive shader animation: 0 body, 1 head + headset, 2 hands, 7 LEDs, 8 controller.
+  // Part ids drive shader animation: 0 body, 1 head + headset, 2 hands, 3 left thumb (stick),
+  // 4 right thumb (buttons), 6 eye, 7 LEDs, 8 controller.
   const HEAD = { x: -0.13, y: 0.46, tilt: 0.2 };
   const TORSO = { x: 0.05, y: -0.22, lean: 0.2 };
   const PAD = { x: -0.36, y: -0.07, scale: 0.13 };
@@ -176,9 +178,13 @@
       let d = sdEllipsoid(x - 0.02, y - 0.02, z, 0.2, 0.21, 0.165);                     // cranium
       d = smin(d, sdEllipsoid(x + 0.07, y + 0.09, z, 0.12, 0.1, 0.125), 0.06);            // jaw
       d = smin(d, sdCapsule(x, y, z, [-0.165, 0.06, -0.07], [-0.165, 0.06, 0.07], 0.03), 0.04); // brow
+      d = smin(d, sdEllipsoid(x + 0.11, y + 0.01, Math.abs(z) - 0.085, 0.06, 0.04, 0.05), 0.04); // cheekbones
       d = smin(d, sdCapsule(x, y, z, [-0.19, 0.0, 0], [-0.228, -0.045, 0], 0.022), 0.03); // nose
-      d = smin(d, sdCapsule(x, y, z, [-0.18, -0.085, -0.035], [-0.18, -0.085, 0.035], 0.018), 0.02); // lips
+      d = smin(d, Math.hypot(x + 0.205, y + 0.045, Math.abs(z) - 0.02) - 0.016, 0.02);    // nostril wings
+      d = smin(d, sdCapsule(x, y, z, [-0.185, -0.078, -0.03], [-0.185, -0.078, 0.03], 0.014), 0.015); // upper lip
+      d = smin(d, sdCapsule(x, y, z, [-0.178, -0.103, -0.028], [-0.178, -0.103, 0.028], 0.015), 0.015); // lower lip
       d = smin(d, Math.hypot(x + 0.16, y + 0.15, z) - 0.045, 0.04);                       // chin
+      d = smax(d, -(Math.hypot(x + 0.165, y - 0.035, Math.abs(z) - 0.065) - 0.032), 0.015); // eye sockets
       // Hoodie hood pulled up: a shell around the head, open over the face, flowing into the neck.
       let hood = Math.max(sdEllipsoid(x - 0.04, y - 0.03, z, 0.265, 0.275, 0.22),
         -sdEllipsoid(x - 0.03, y - 0.02, z, 0.235, 0.245, 0.19));
@@ -218,7 +224,13 @@
     };
     // Scatter points through a box and pull each onto the surface (Newton steps). Separate budgets
     // for the head and hands keep the details dense; the plain torso gets fewer points.
-    const partOf = (x, y, z) => (Math.hypot(x - HEAD.x, y - HEAD.y, z) < 0.34 && y > 0.22 ? 1 : (x < -0.2 && y < 0.02 ? 2 : 0));
+    const partOf = (x, y, z) => {
+      if (Math.hypot(x - HEAD.x, y - HEAD.y, z) < 0.34 && y > 0.22) return 1;
+      for (const s of [1, -1]) {
+        if (sdCapsule(x, y, z, [-0.31, -0.06, 0.11 * s], [-0.36, -0.02, 0.07 * s], 0.022) < 0.012) return s > 0 ? 3 : 4;
+      }
+      return x < -0.2 && y < 0.02 ? 2 : 0;
+    };
     const sculpt = (count, [x0, x1], [y0, y1], [z0, z1], only) => {
       const start = pts.length;
       let guard = 0;
@@ -233,14 +245,15 @@
         }
         if (!ok || y < -0.52) continue;
         const part = partOf(x, y, z);
-        if (only !== undefined && part !== only) continue;
+        if (only && !only.includes(part)) continue;
         const [nx, ny, nz] = grad(x, y, z);
         pts.push([x, y, z, nx, ny, nz, part]);
       }
     };
-    sculpt(Math.floor(N * 0.22), [-0.45, 0.2], [0.18, 0.76], [-0.26, 0.26], 1); // face and head
-    sculpt(Math.floor(N * 0.08), [-0.46, -0.1], [-0.3, 0.06], [-0.32, 0.32], 2); // hands
-    sculpt(Math.floor(N * 0.36), [-0.55, 0.4], [-0.52, 0.76], [-0.42, 0.42]);    // everything
+    sculpt(Math.floor(N * 0.2), [-0.45, 0.2], [0.18, 0.76], [-0.26, 0.26], [1]);     // head
+    sculpt(Math.floor(N * 0.1), [-0.42, -0.14], [0.25, 0.62], [-0.12, 0.18], [1]);   // extra detail on the face
+    sculpt(Math.floor(N * 0.08), [-0.46, -0.1], [-0.3, 0.06], [-0.32, 0.32], [2, 3, 4]); // hands and thumbs
+    sculpt(Math.floor(N * 0.3), [-0.55, 0.4], [-0.52, 0.76], [-0.42, 0.42]);         // everything
 
     // Hard-surface meshes: headset (in the head frame) and the controller in the hands.
     const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -284,7 +297,9 @@
       const sample = surfaceSampler(THREE, parts);
       for (let k = 0; k < count; k++) { sample(rnd, tmp); pts.push([...tmp, part]); }
     };
-    meshFill(headset, Math.floor(N * 0.12), 1);
+    meshFill(headset, Math.floor(N * 0.11), 1);
+    // The near eye, catching the screen's light.
+    meshFill([inHead(new THREE.SphereGeometry(0.017, 12, 10), -0.158, 0.035, 0.066)], Math.floor(N * 0.006), 6);
     // Hoodie drawstrings hanging down the chest.
     meshFill([-1, 1].map((s) => {
       const A = V(-0.17, 0.23, 0.045 * s), B = V(-0.25, -0.01, 0.055 * s), dir = B.clone().sub(A);
@@ -323,7 +338,14 @@
       light[i * 3 + 1] = fade * Math.pow(Math.max(0, p[3] * rx + p[4] * ry + p[5] * rz), 1.5);
       light[i * 3 + 2] = fade;
     }
-    return { pos, normal, part, light };
+    // Pivots for the shader's gameplay animation, in the same normalized space.
+    const toUnit = (v) => [(v.x - cx) / radius, (v.y - cy) / radius, (v.z - cz) / radius];
+    const anchors = {
+      pad: toUnit(V(PAD.x, PAD.y, 0)),
+      buttons: toUnit(V(0.74, 0.12, 0.25).applyMatrix4(padMatrix)),
+      neck: toUnit(V(HEAD.x + 0.03, HEAD.y - 0.2, 0)),
+    };
+    return { pos, normal, part, light, anchors };
   }
 
   // 2. Level island: topographic contour lines rising out of a dotted editor grid.
@@ -525,6 +547,9 @@
   uniform float uChaos;
   uniform mat4 uXf[${SHAPES}];
   uniform vec3 uMouse;
+  uniform vec3 uPadC;
+  uniform vec3 uBtnC;
+  uniform vec3 uNeck;
   attribute vec3 aP1;
   attribute vec3 aP2;
   attribute vec3 aP3;
@@ -542,20 +567,38 @@
     float x = clamp((m - i) * 1.8 - r * 0.8, 0.0, 1.0);
     return x * x * (3.0 - 2.0 * x);
   }
+  mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
   void main(){
-    // Hero gamer: animate its parts in local space before placing it.
+    // Hero gamer: animate its parts in local space before placing it, to a gameplay rhythm of
+    // steering sway with quick corrections and bursts of button taps.
     vec3 hp = position;
     float part = aPart;
-    bool isHead = (part > 0.5 && part < 1.5) || (part > 6.5 && part < 7.5);
-    bool isHands = (part > 1.5 && part < 2.5) || part > 7.5;
-    hp.y += 0.004 * sin(uTime * 1.5);                                  // breathing
-    if (isHead) {                                                      // nodding along to the game
-      hp.y += 0.007 * sin(uTime * 2.2);
-      hp.x -= 0.006 * max(0.0, sin(uTime * 1.1));
-    } else if (isHands) {                                              // button mashing + steering
-      hp.xy += vec2(sin(uTime * 14.0 + aRnd.y * 6.28), sin(uTime * 11.0 + aRnd.z * 6.28)) * 0.002;
-      hp.z += 0.01 * sin(uTime * 1.6);
-      hp.y += 0.004 * abs(sin(uTime * 3.1));
+    float steer = 0.11 * sin(uTime * 1.25) + 0.05 * sin(uTime * 3.1 + 1.3)
+                + 0.05 * sin(uTime * 9.0) * step(0.65, fract(uTime * 0.37));
+    float tap = step(0.35, fract(uTime * 0.45)) * pow(max(0.0, sin(uTime * 13.0)), 6.0);
+    bool isHead = (part > 0.5 && part < 1.5) || (part > 5.5 && part < 7.5);
+    bool isHands = (part > 1.5 && part < 4.5) || part > 7.5;
+    const vec3 PAD_N = vec3(0.479, 0.878, 0.0);    // controller face normal
+    const vec3 PAD_F = vec3(-0.878, 0.479, 0.0);   // across the face, away from the player
+    if (part > 2.5 && part < 3.5) {                // left thumb circles the stick
+      hp += (cos(uTime * 4.2) * vec3(0.0, 0.0, 1.0) + sin(uTime * 4.2) * PAD_F) * 0.016;
+    } else if (part > 3.5 && part < 4.5) {         // right thumb taps the face buttons
+      hp -= PAD_N * 0.022 * tap;
+    }
+    if (isHands) {                                 // controller tilts like steering; wrists follow
+      vec3 q = hp - uPadC;
+      float w = 1.0 - smoothstep(0.1, 0.55, length(q));
+      q.yz = rot(1.6 * steer * w) * q.yz;
+      q.xy = rot((0.05 * sin(uTime * 2.0) + 0.12 * tap) * w) * q.xy;
+      hp = uPadC + q;
+    } else if (isHead) {                           // nods along and leans into the turns
+      vec3 q = hp - uNeck;
+      q.xy = rot(0.05 * sin(uTime * 2.2) + 0.2 * steer) * q.xy;
+      q.yz = rot(0.35 * steer) * q.yz;
+      hp = uNeck + q;
+    } else {                                       // body breathes and sways with the game
+      hp.y += 0.004 * sin(uTime * 1.5);
+      hp.z += 0.03 * steer * smoothstep(-0.6, 0.6, hp.y);
     }
     vec3 p0 = (uXf[0] * vec4(hp, 1.0)).xyz;
     vec3 p1 = (uXf[1] * vec4(aP1, 1.0)).xyz;
@@ -603,15 +646,18 @@
     // to the shared look as the particles leave the hero shape (t1).
     float rndAccent = step(0.86, fract(aRnd.y * 7.31));
     bool glows = part > 6.5;
+    bool eye = part > 5.5 && part < 6.5;
     // Outline glow: surfaces turning away from the camera light up, so the silhouette reads.
     // Surfaces facing away from the camera are dimmed, so the hero reads as a solid form.
     vec3 nW = normalize(mat3(uXf[0]) * aNormal);
     float facing = dot(nW, normalize(cameraPosition - p0));
     float fres = pow(1.0 - abs(facing), 2.0) * aLight.z;
-    float heroAccent = glows ? 1.0 : clamp(aLight.y * 1.6, 0.0, 1.0);
+    float heroAccent = glows ? 1.0 : (eye ? 0.0 : clamp(aLight.y * 1.6, 0.0, 1.0));
     float heroAlpha = glows ? 2.6 : (0.03 + 3.0 * pow(aLight.x, 1.3) + 1.7 * aLight.y + 2.1 * fres);
     heroAlpha *= smoothstep(-0.2, 0.25, facing);
     if (part > 6.5 && part < 7.5) heroAlpha *= 0.7 + 0.3 * sin(uTime * 3.0);   // LED pulse
+    if (eye) heroAlpha = 2.8;                                                  // catch-light in the eye
+    if (part > 7.5) heroAlpha *= 1.0 + 3.0 * tap * (1.0 - smoothstep(0.0, 0.08, distance(position, uBtnC))); // buttons flash on taps
     vAccent = mix(heroAccent, rndAccent, t1);
     vAlpha *= mix(heroAlpha, 1.0, t1);
   }`;
@@ -791,6 +837,9 @@
       uChaos: { value: reduced ? 0 : 1 },
       uXf: { value: xf },
       uMouse: { value: new THREE.Vector3(0, 0, 0) },
+      uPadC: { value: new THREE.Vector3(...hero.anchors.pad) },
+      uBtnC: { value: new THREE.Vector3(...hero.anchors.buttons) },
+      uNeck: { value: new THREE.Vector3(...hero.anchors.neck) },
       uColA: { value: new THREE.Color(0.93, 0.91, 0.87) },
       uColB: { value: new THREE.Color(1.0, 0.416, 0.239) },
       uOpacity: { value: 1 },
