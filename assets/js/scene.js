@@ -164,7 +164,7 @@
   // controller are hard-surface meshes. Each particle stores baked lighting: a cool key light from
   // the off-screen game on the left and an orange rim light from behind.
   // Part ids drive shader animation: 0 body, 1 head + headset, 2 hands, 3 left thumb (stick),
-  // 4 right thumb (buttons), 6 eye, 7 LEDs, 8 controller.
+  // 4 right thumb (buttons), 5 iris, 6 eye white + shine, 7 LEDs, 8 controller.
   const HEAD = { x: -0.13, y: 0.46, tilt: 0.2 };
   const TORSO = { x: 0.05, y: -0.22, lean: 0.2 };
   const PAD = { x: -0.36, y: -0.07, scale: 0.13 };
@@ -175,16 +175,14 @@
 
     // Head in its own (untilted) frame, face toward -x.
     const headSdf = (x, y, z) => {
-      let d = sdEllipsoid(x - 0.02, y - 0.02, z, 0.2, 0.21, 0.165);                     // cranium
-      d = smin(d, sdEllipsoid(x + 0.07, y + 0.09, z, 0.12, 0.1, 0.125), 0.06);            // jaw
-      d = smin(d, sdCapsule(x, y, z, [-0.165, 0.06, -0.07], [-0.165, 0.06, 0.07], 0.03), 0.04); // brow
-      d = smin(d, sdEllipsoid(x + 0.11, y + 0.01, Math.abs(z) - 0.085, 0.06, 0.04, 0.05), 0.04); // cheekbones
-      d = smin(d, sdCapsule(x, y, z, [-0.19, 0.0, 0], [-0.228, -0.045, 0], 0.022), 0.03); // nose
-      d = smin(d, Math.hypot(x + 0.205, y + 0.045, Math.abs(z) - 0.02) - 0.016, 0.02);    // nostril wings
-      d = smin(d, sdCapsule(x, y, z, [-0.185, -0.078, -0.03], [-0.185, -0.078, 0.03], 0.014), 0.015); // upper lip
-      d = smin(d, sdCapsule(x, y, z, [-0.178, -0.103, -0.028], [-0.178, -0.103, 0.028], 0.015), 0.015); // lower lip
-      d = smin(d, Math.hypot(x + 0.16, y + 0.15, z) - 0.045, 0.04);                       // chin
-      d = smax(d, -(Math.hypot(x + 0.165, y - 0.035, Math.abs(z) - 0.065) - 0.032), 0.015); // eye sockets
+      // Cartoon proportions: big round head, chubby cheeks, small chin, button nose, big eyes.
+      let d = sdEllipsoid(x - 0.01, y - 0.03, z, 0.205, 0.205, 0.18);                    // round cranium
+      d = smin(d, sdEllipsoid(x + 0.06, y + 0.07, z, 0.14, 0.12, 0.15), 0.06);             // lower face
+      d = smin(d, sdEllipsoid(x + 0.12, y + 0.06, Math.abs(z) - 0.07, 0.07, 0.065, 0.06), 0.04); // chubby cheeks
+      d = smin(d, Math.hypot(x + 0.13, y + 0.135, z) - 0.055, 0.05);                       // small round chin
+      d = smin(d, Math.hypot(x + 0.205, y, z) - 0.03, 0.03);                               // button nose
+      d = smax(d, -sdCapsule(x, y, z, [-0.19, -0.085, -0.035], [-0.183, -0.072, 0.045], 0.009), 0.01); // smile
+      d = smax(d, -(Math.hypot(x + 0.15, y - 0.035, Math.abs(z) - 0.075) - 0.045), 0.012); // eye sockets
       // Hoodie hood pulled up: a shell around the head, open over the face, flowing into the neck.
       let hood = Math.max(sdEllipsoid(x - 0.04, y - 0.03, z, 0.265, 0.275, 0.22),
         -sdEllipsoid(x - 0.03, y - 0.02, z, 0.235, 0.245, 0.19));
@@ -192,10 +190,14 @@
       hood = Math.max(hood, -(y + 0.22));           // open at the bottom, where it meets the neck
       return Math.min(d, hood);
     };
+    // Thumb base and tip per side: +1 near hand on the left stick, -1 far hand on the face buttons.
+    const thumb = (s) => (s > 0
+      ? [[-0.3, -0.05, 0.135], [-0.341, -0.003, 0.094]]
+      : [[-0.3, -0.05, -0.135], [-0.348, -0.016, -0.096]]);
     const arm = (s) => [
       [[-0.02, 0.06, 0.27 * s], [0.02, -0.25, 0.29 * s], 0.085],     // upper arm (hoodie sleeve)
       [[0.02, -0.25, 0.29 * s], [-0.28, -0.12, 0.16 * s], 0.07],     // forearm
-      [[-0.31, -0.06, 0.11 * s], [-0.36, -0.02, 0.07 * s], 0.022],   // thumb on the stick
+      [...thumb(s), 0.024],                                          // thumb
     ];
     const limbs = [...arm(1), ...arm(-1),
       [[-0.02, 0.1, -0.25], [-0.02, 0.1, 0.25], 0.1],               // shoulder line
@@ -227,7 +229,7 @@
     const partOf = (x, y, z) => {
       if (Math.hypot(x - HEAD.x, y - HEAD.y, z) < 0.34 && y > 0.22) return 1;
       for (const s of [1, -1]) {
-        if (sdCapsule(x, y, z, [-0.31, -0.06, 0.11 * s], [-0.36, -0.02, 0.07 * s], 0.022) < 0.012) return s > 0 ? 3 : 4;
+        if (sdCapsule(x, y, z, ...thumb(s), 0.024) < 0.012) return s > 0 ? 3 : 4;
       }
       return x < -0.2 && y < 0.02 ? 2 : 0;
     };
@@ -279,11 +281,11 @@
       inHead(new THREE.CylinderGeometry(0.11, 0.11, 0.075, 30), 0.01, 0, 0.255, [Math.PI / 2, 0, 0]),
       inHead(new THREE.TorusGeometry(0.095, 0.026, 8, 30), 0.01, 0, 0.222),
       inHead(new THREE.TorusGeometry(0.3, 0.032, 8, 48, Math.PI), 0.02, 0.0, 0, [0, Math.PI / 2, 0]),
-      headLimb([-0.03, -0.06, 0.27], [-0.19, -0.11, 0.08], 0.012), // mic boom
+      headLimb([-0.03, -0.06, 0.27], [-0.215, -0.1, 0.065], 0.012), // mic boom
     ];
     const leds = [
       inHead(new THREE.TorusGeometry(0.075, 0.017, 8, 44), 0.01, 0, 0.296),
-      inHead(new THREE.SphereGeometry(0.026, 12, 8), -0.2, -0.11, 0.075), // mic tip
+      inHead(new THREE.SphereGeometry(0.024, 12, 8), -0.232, -0.098, 0.05), // mic tip, in front of the mouth
     ];
     // Controller: width along z, face tilted up toward the player's eyes, grips toward the hands.
     const padBasis = new THREE.Matrix4().makeBasis(V(0, 0, -1), V(-1, 0, 0), V(0, 1, 0));
@@ -298,8 +300,44 @@
       for (let k = 0; k < count; k++) { sample(rnd, tmp); pts.push([...tmp, part]); }
     };
     meshFill(headset, Math.floor(N * 0.11), 1);
-    // The near eye, catching the screen's light.
-    meshFill([inHead(new THREE.SphereGeometry(0.017, 12, 10), -0.158, 0.035, 0.066)], Math.floor(N * 0.006), 6);
+    // Big cartoon eye on the near side: a white eyeball with an empty (dark) pupil looking toward
+    // the screen, an orange iris ring and a bright shine.
+    {
+      const eyeC = V(-0.152, 0.035, 0.075).applyMatrix4(headMatrix);
+      const gaze = V(-1, -0.12, 0.1).normalize().applyMatrix4(new THREE.Matrix4().makeRotationZ(HEAD.tilt));
+      const r = 0.038, count = Math.floor(N * 0.022);
+      for (let k = 0, guard = 0; k < count && guard < count * 20; guard++) {
+        const zz = rnd() * 2 - 1, aa = rnd() * Math.PI * 2, rr = Math.sqrt(1 - zz * zz);
+        const dx = rr * Math.cos(aa), dy = zz, dz = rr * Math.sin(aa);
+        const g = dx * gaze.x + dy * gaze.y + dz * gaze.z;
+        if (g > 0.9 || g < -0.15) continue; // pupil stays dark; the back sits inside the head
+        pts.push([eyeC.x + dx * r, eyeC.y + dy * r, eyeC.z + dz * r, dx, dy, dz, g > 0.74 ? 5 : 6]);
+        k++;
+      }
+      const shine = eyeC.clone().addScaledVector(gaze, r * 0.92).add(V(0.004, 0.016, 0.012));
+      for (let k = 0, count2 = Math.floor(N * 0.004); k < count2; k++) {
+        pts.push([shine.x + gaussian(rnd) * 0.003, shine.y + gaussian(rnd) * 0.003, shine.z + gaussian(rnd) * 0.003,
+          gaze.x, gaze.y, gaze.z, 6]);
+      }
+    }
+    meshFill([headLimb([-0.195, 0.1, 0.03], [-0.142, 0.118, 0.128], 0.012)], Math.floor(N * 0.006), 1); // eyebrow
+    // Spiky fringe poking out from under the hood.
+    const spike = (base, tip, rad) => {
+      const A = V(...base), B = V(...tip), dir = B.clone().sub(A);
+      return {
+        geo: new THREE.ConeGeometry(rad, dir.length(), 10, 1, true),
+        matrix: headMatrix.clone().multiply(new THREE.Matrix4().compose(A.clone().add(B).multiplyScalar(0.5),
+          new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir.normalize()), V(1, 1, 1))),
+      };
+    };
+    meshFill([
+      spike([-0.12, 0.21, -0.07], [-0.25, 0.115, -0.09], 0.045),
+      spike([-0.12, 0.22, -0.02], [-0.275, 0.105, -0.025], 0.048),
+      spike([-0.12, 0.22, 0.03], [-0.285, 0.1, 0.035], 0.048),
+      spike([-0.12, 0.21, 0.08], [-0.27, 0.105, 0.095], 0.046),
+      spike([-0.11, 0.2, 0.125], [-0.245, 0.115, 0.145], 0.042),
+      spike([-0.1, 0.18, 0.16], [-0.2, 0.115, 0.19], 0.036),
+    ], Math.floor(N * 0.04), 1);
     // Hoodie drawstrings hanging down the chest.
     meshFill([-1, 1].map((s) => {
       const A = V(-0.17, 0.23, 0.045 * s), B = V(-0.25, -0.01, 0.055 * s), dir = B.clone().sub(A);
@@ -344,6 +382,9 @@
       pad: toUnit(V(PAD.x, PAD.y, 0)),
       buttons: toUnit(V(0.74, 0.12, 0.25).applyMatrix4(padMatrix)),
       neck: toUnit(V(HEAD.x + 0.03, HEAD.y - 0.2, 0)),
+      stick: toUnit(V(-0.72, 0.12, 0.36).applyMatrix4(padMatrix)),
+      thumbL: toUnit(V(...thumb(1)[0])),
+      thumbR: toUnit(V(...thumb(-1)[0])),
     };
     return { pos, normal, part, light, anchors };
   }
@@ -550,6 +591,9 @@
   uniform vec3 uPadC;
   uniform vec3 uBtnC;
   uniform vec3 uNeck;
+  uniform vec3 uStickC;
+  uniform vec3 uThumbL;
+  uniform vec3 uThumbR;
   attribute vec3 aP1;
   attribute vec3 aP2;
   attribute vec3 aP3;
@@ -568,28 +612,34 @@
     return x * x * (3.0 - 2.0 * x);
   }
   mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+  // One button press per cycle: fast down, short hold, slower release.
+  float tapPress(float t, float rate, float phase){
+    float c = fract(t * rate + phase);
+    return smoothstep(0.0, 0.07, c) * (1.0 - smoothstep(0.14, 0.5, c));
+  }
   void main(){
     // Hero gamer: animate its parts in local space before placing it, to a gameplay rhythm of
     // steering sway with quick corrections and bursts of button taps.
     vec3 hp = position;
     float part = aPart;
-    float steer = 0.11 * sin(uTime * 1.25) + 0.05 * sin(uTime * 3.1 + 1.3)
-                + 0.05 * sin(uTime * 9.0) * step(0.65, fract(uTime * 0.37));
-    float tap = step(0.35, fract(uTime * 0.45)) * pow(max(0.0, sin(uTime * 13.0)), 6.0);
-    bool isHead = (part > 0.5 && part < 1.5) || (part > 5.5 && part < 7.5);
+    float steer = 0.07 * sin(uTime * 1.1) + 0.03 * sin(uTime * 2.7 + 1.3);
+    // "Tuk tuk tuk": quick presses in bursts. Right thumb on the face buttons, left on the stick.
+    float pressR = step(fract(uTime * 0.42), 0.68) * tapPress(uTime, 4.6, 0.0);
+    float pressL = step(0.45, fract(uTime * 0.42 + 0.3)) * tapPress(uTime, 3.8, 0.37);
+    bool isHead = (part > 0.5 && part < 1.5) || (part > 4.5 && part < 7.5);
     bool isHands = (part > 1.5 && part < 4.5) || part > 7.5;
     const vec3 PAD_N = vec3(0.479, 0.878, 0.0);    // controller face normal
-    const vec3 PAD_F = vec3(-0.878, 0.479, 0.0);   // across the face, away from the player
-    if (part > 2.5 && part < 3.5) {                // left thumb circles the stick
-      hp += (cos(uTime * 4.2) * vec3(0.0, 0.0, 1.0) + sin(uTime * 4.2) * PAD_F) * 0.016;
+    if (part > 2.5 && part < 3.5) {                // left thumb presses down; the tip moves most
+      hp -= PAD_N * 0.04 * pressL * clamp(length(hp - uThumbL) / 0.1, 0.0, 1.0);
     } else if (part > 3.5 && part < 4.5) {         // right thumb taps the face buttons
-      hp -= PAD_N * 0.022 * tap;
+      hp -= PAD_N * 0.04 * pressR * clamp(length(hp - uThumbR) / 0.1, 0.0, 1.0);
     }
-    if (isHands) {                                 // controller tilts like steering; wrists follow
+    if (isHands) {                                 // controller jolts on each press, sways a little
       vec3 q = hp - uPadC;
       float w = 1.0 - smoothstep(0.1, 0.55, length(q));
-      q.yz = rot(1.6 * steer * w) * q.yz;
-      q.xy = rot((0.05 * sin(uTime * 2.0) + 0.12 * tap) * w) * q.xy;
+      q -= PAD_N * 0.007 * (pressL + pressR) * w;
+      q.yz = rot(0.9 * steer * w) * q.yz;
+      q.xy = rot((0.03 * sin(uTime * 2.0) + 0.05 * (pressL + pressR)) * w) * q.xy;
       hp = uPadC + q;
     } else if (isHead) {                           // nods along and leans into the turns
       vec3 q = hp - uNeck;
@@ -647,17 +697,20 @@
     float rndAccent = step(0.86, fract(aRnd.y * 7.31));
     bool glows = part > 6.5;
     bool eye = part > 5.5 && part < 6.5;
+    bool iris = part > 4.5 && part < 5.5;
     // Outline glow: surfaces turning away from the camera light up, so the silhouette reads.
     // Surfaces facing away from the camera are dimmed, so the hero reads as a solid form.
     vec3 nW = normalize(mat3(uXf[0]) * aNormal);
     float facing = dot(nW, normalize(cameraPosition - p0));
     float fres = pow(1.0 - abs(facing), 2.0) * aLight.z;
-    float heroAccent = glows ? 1.0 : (eye ? 0.0 : clamp(aLight.y * 1.6, 0.0, 1.0));
+    float heroAccent = (glows || iris) ? 1.0 : (eye ? 0.0 : clamp(aLight.y * 1.6, 0.0, 1.0));
     float heroAlpha = glows ? 2.6 : (0.03 + 3.0 * pow(aLight.x, 1.3) + 1.7 * aLight.y + 2.1 * fres);
     heroAlpha *= smoothstep(-0.2, 0.25, facing);
     if (part > 6.5 && part < 7.5) heroAlpha *= 0.7 + 0.3 * sin(uTime * 3.0);   // LED pulse
-    if (eye) heroAlpha = 2.8;                                                  // catch-light in the eye
-    if (part > 7.5) heroAlpha *= 1.0 + 3.0 * tap * (1.0 - smoothstep(0.0, 0.08, distance(position, uBtnC))); // buttons flash on taps
+    if (eye) heroAlpha = 2.6;                                                  // white of the big cartoon eye
+    if (iris) heroAlpha = 2.4;
+    if (part > 7.5) heroAlpha *= 1.0 + 3.2 * (pressR * (1.0 - smoothstep(0.0, 0.08, distance(position, uBtnC)))
+                                         + pressL * (1.0 - smoothstep(0.0, 0.07, distance(position, uStickC)))); // flash on presses
     vAccent = mix(heroAccent, rndAccent, t1);
     vAlpha *= mix(heroAlpha, 1.0, t1);
   }`;
@@ -840,6 +893,9 @@
       uPadC: { value: new THREE.Vector3(...hero.anchors.pad) },
       uBtnC: { value: new THREE.Vector3(...hero.anchors.buttons) },
       uNeck: { value: new THREE.Vector3(...hero.anchors.neck) },
+      uStickC: { value: new THREE.Vector3(...hero.anchors.stick) },
+      uThumbL: { value: new THREE.Vector3(...hero.anchors.thumbL) },
+      uThumbR: { value: new THREE.Vector3(...hero.anchors.thumbR) },
       uColA: { value: new THREE.Color(0.93, 0.91, 0.87) },
       uColB: { value: new THREE.Color(1.0, 0.416, 0.239) },
       uOpacity: { value: 1 },
